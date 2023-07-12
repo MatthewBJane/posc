@@ -3,7 +3,7 @@ posc_lm <- function(model, predictor_name = 'Predicted Y',
                       color = 'black',
                       ci.lvl = .95){
 
-  options(warn=-1)
+ options(warn=-1)
 
  x = model$fitted.values
  y = model$model$y
@@ -22,14 +22,13 @@ posc_lm <- function(model, predictor_name = 'Predicted Y',
  pL = pnorm(rL*delta_x/sqrt(2*(1-rL^2)))
 
  if(cor(x,y)>=0){
-   ystring = 'Probability of higher Y'
+   ystring = 'Probability of higher '
  } else if(cor(x,y) < 0){
-   ystring = 'Probability of lower Y'
+   ystring = 'Probability of lower '
  }
 
  main_plot = ggplot(data = NULL, aes(x = sigma*delta_x, y = py)) +
    geom_line(linewidth=1.5,color = color) +
-   coord_cartesian(ylim=c(.5,1),xlim = c(0,sigma*4)) +
    geom_ribbon(data=NULL,aes(x = sigma*delta_x,ymin = pL,ymax = pU),alpha=.15,fill = color) +
    theme_light() +
    theme(axis.text.x = element_text(size=11),

@@ -37,8 +37,8 @@ posc_uni <- function(r,
 
   main_plot = ggplot(data = NULL, aes(x = sigma*delta_x, y = py)) +
     geom_line(linewidth=1.5,color = color) +
-    coord_cartesian(ylim=c(.5,1),xlim = c(0,sigma*4)) +
     geom_ribbon(data=NULL,aes(x = sigma*delta_x,ymin = pL,ymax = pU),alpha=.15,fill = color) +
+    coord_cartesian(ylim=c(0.5,1.0),xlim = c(0,sigma*4)) +
     theme_light() +
     theme(axis.text.x = element_text(size=11),
           axis.text.y = element_text(size=11),
@@ -49,7 +49,7 @@ posc_uni <- function(r,
     ggtitle('Probability of Outcome Superiority Curve (POSC)')
 
 
-    print(main_plot)
+ print(main_plot)
 
 invisible(list(
   parameters = data.frame(r = r, n = n),
