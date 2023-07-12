@@ -16,5 +16,6 @@ in the predictor variable (e.g., cognitive ability).
 
 ## Installation 
 ```
+install.packages('devtools')
 devtools::install_github("MatthewBJane/posc")
 ```
