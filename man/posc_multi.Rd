@@ -35,9 +35,9 @@ Where r is the composite correlation coefficient between the optimal linear comb
 \item{predict_matrix}{a \code{data.frame()} object with the following predicted values: delta_x = the x-values (difference in predictor), py = probability of higher/lower outcome at each delta_x, pyUCI = Upper confidence bound of py, pyLCI = Lower confidence bound of py. }
 \item{posc_plot_object}{a \code{ggplot()} object containing the POSC plot}
 }
-\references{}
+
 \author{Matthew B. Jané}
-\note{}
+
 \seealso{ \code{posc_uni}, \code{posc_lm}, \code{posc_comp} }
 \examples{
 

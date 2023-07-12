@@ -25,17 +25,11 @@ Visual comparison and statistical test of the difference between two POSCs.
 \item{statistics}{a \code{data.frame()} object containing the following statistics: r = the correlation between predicted x and y from POSC 1 and POSC 2, n = sample size from POSC 1 and POSC 2, z = z-statistic for the difference between the two correlation coefficients, p = p-value between}
 \item{posc_plot_object}{A \code{ggplot()} object containing the POSC plot}
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Matthew B. Jané
 }
-\note{
-%%  ~~further notes~~
-}
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
 \code{posc_uni}, \code{posc_multi}, \code{posc_lm}

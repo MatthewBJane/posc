@@ -3,7 +3,8 @@
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{posc_lm: Probability of Outcome Superiority Curve (POSC) with a Single Predictor}
 \description{This function generates a probability of outcome superiority curve from a given correlation coefficient and sample size.}
-\usage{posc_lm(model, predictor_name = 'Predicted Y', outcome_name = 'Y', color = 'black', ci.lvl = .95)}
+\usage{posc_lm(model, predictor_name = 'Predicted Y', outcome_name = 'Y',
+color = 'black', ci.lvl = .95)}
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{model}{A \code{lm()} or \code{glm()} object.}
@@ -25,15 +26,11 @@ A list containing the following:
 \item{posc_plot_object}{A \code{ggplot()} object containing the POSC plot}
 
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Matthew B. Jané
 }
-\note{
-%%  ~~further notes~~
-}
+
 
 %% ~Make other sections like Warning with \section{Warning }{....} ~
 

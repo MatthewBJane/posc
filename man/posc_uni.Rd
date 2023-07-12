@@ -26,17 +26,12 @@ Probability of Outcome Superiority Curves (POSCs) are calculated from the probab
 \item{predict_matrix}{a \code{data.frame()} object with the following predicted values: delta_x = the x-values (difference in predictor), py = probability of higher/lower outcome at each delta_x, pyUCI = Upper confidence bound of py, pyLCI = Lower confidence bound of py. }
 \item{posc_plot_object}{a \code{ggplot()} object containing the POSC plot}
 }
-\references{
-%% ~put references to the literature/web site here ~
-}
+
 \author{
 Matthew B. Jané
 }
-\note{
-%%  ~~further notes~~
-}
 
-%% ~Make other sections like Warning with \section{Warning }{....} ~
+
 
 \seealso{
 \code{posc_multi}, \code{posc_lm}, \code{posc_comp}
