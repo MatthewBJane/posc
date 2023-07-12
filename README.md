@@ -16,5 +16,5 @@ in the predictor variable (e.g., cognitive ability).
 
 ## Installation 
 ```
-devtools::install_github("DeveloperName/PackageName")
+devtools::install_github("MatthewBJane/posc")
 ```
