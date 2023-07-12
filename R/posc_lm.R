@@ -6,7 +6,7 @@ posc_lm <- function(model, predictor_name = 'Predicted Y',
   options(warn=-1)
 
  x = model$fitted.values
- y = model$effects
+ y = model$model$y
  sigma = sd(x) * sqrt(2)
  n = nrow(mdl$model)
  r = abs(cor(x,y))
@@ -21,9 +21,9 @@ posc_lm <- function(model, predictor_name = 'Predicted Y',
  pU = pnorm(rU*delta_x/sqrt(2*(1-rU^2)))
  pL = pnorm(rL*delta_x/sqrt(2*(1-rL^2)))
 
- if(r>=0){
+ if(cor(x,y)>=0){
    ystring = 'Probability of higher Y'
- } else if(r < 0){
+ } else if(cor(x,y) < 0){
    ystring = 'Probability of lower Y'
  }
 
