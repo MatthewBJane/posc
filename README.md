@@ -1,6 +1,6 @@
 # posc: Probability of Outcome Superiority Curves
 
-# Description
+## Description
 The bivariate relationship between a continuous predictor and a continuous outcome is 
 conventionally reported as a correlation coefficient and displayed with a scatter plot. Correlations and 
 scatter plots are often difficult to accurately interpret in a probabilistic manner. Common language effect 
@@ -14,7 +14,7 @@ when applied to decision-making situations such as applicant selection. For exam
 probability that person A has a higher outcome (e.g. job performance) than person B given a specified difference 
 in the predictor variable (e.g., cognitive ability).
 
-# Installation 
+## Installation 
 ```
 devtools::install_github("DeveloperName/PackageName")
 ```
