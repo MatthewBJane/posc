@@ -28,17 +28,16 @@ remotes::install_github("MatthewBJane/posc")
 
 | Function | Starts from | Assumes |
 |----|----|----|
-| [`posc_uni()`](https://matthewbjane.github.io/posc/reference/posc_uni.md) | a correlation *r* and *n* | bivariate normality |
-| [`posc_multi()`](https://matthewbjane.github.io/posc/reference/posc_multi.md) | a correlation matrix | multivariate normality |
-| [`posc_lm()`](https://matthewbjane.github.io/posc/reference/posc_lm.md) | a fitted [`lm()`](https://rdrr.io/r/stats/lm.html) model | normality of fitted values |
-| [`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md) | raw `x` and `y` data | nothing beyond exchangeable pairs |
-| [`posc_comp()`](https://matthewbjane.github.io/posc/reference/posc_comp.md) | two or more curves | independent samples (for the test) |
+| [`posc_uni()`](https://matthewbjane.com/posc/reference/posc_uni.md) | a correlation *r* and *n* | bivariate normality |
+| [`posc_multi()`](https://matthewbjane.com/posc/reference/posc_multi.md) | a correlation matrix | multivariate normality |
+| [`posc_lm()`](https://matthewbjane.com/posc/reference/posc_lm.md) | a fitted [`lm()`](https://rdrr.io/r/stats/lm.html) model | normality of fitted values |
+| [`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md) | raw `x` and `y` data | nothing beyond exchangeable pairs |
+| [`posc_comp()`](https://matthewbjane.com/posc/reference/posc_comp.md) | two or more curves | independent samples (for the test) |
 
-[`posc_uni()`](https://matthewbjane.github.io/posc/reference/posc_uni.md),
-[`posc_multi()`](https://matthewbjane.github.io/posc/reference/posc_multi.md),
-[`posc_lm()`](https://matthewbjane.github.io/posc/reference/posc_lm.md)
-and
-[`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md)
+[`posc_uni()`](https://matthewbjane.com/posc/reference/posc_uni.md),
+[`posc_multi()`](https://matthewbjane.com/posc/reference/posc_multi.md),
+[`posc_lm()`](https://matthewbjane.com/posc/reference/posc_lm.md) and
+[`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md)
 return a `"posc"` object with
 [`print()`](https://rdrr.io/r/base/print.html),
 [`summary()`](https://rdrr.io/r/base/summary.html),
@@ -90,7 +89,7 @@ default. `plot(x, full = TRUE)` shows the whole sigmoid.
 
 ## Empirical curves
 
-[`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md)
+[`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md)
 compares every pair of people (or a random subset of pairs for large
 samples) and fits a logistic regression of “the person higher on *X* is
 also higher on *Y*” on a natural spline of the difference in *X*. The

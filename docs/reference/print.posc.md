@@ -40,7 +40,7 @@ summary(object, delta = NULL, ...)
 [`print()`](https://rdrr.io/r/base/print.html) returns `x` invisibly.
 [`summary()`](https://rdrr.io/r/base/summary.html) returns a data frame
 as described in
-[`predict.posc()`](https://matthewbjane.github.io/posc/reference/predict.posc.md).
+[`predict.posc()`](https://matthewbjane.com/posc/reference/predict.posc.md).
 
 ## Examples
 

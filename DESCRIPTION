@@ -15,7 +15,7 @@ Description: Computes, plots and compares probability of outcome superiority
     from a fitted linear model, or estimated directly from raw data with a
     flexible spline model and bootstrap confidence bands.
 License: MIT + file LICENSE
-URL: https://matthewbjane.github.io/posc/, https://github.com/MatthewBJane/posc
+URL: https://matthewbjane.com/posc/, https://github.com/MatthewBJane/posc
 BugReports: https://github.com/MatthewBJane/posc/issues
 Depends:
     R (>= 4.1.0)

@@ -5,8 +5,8 @@ on the predictor is also higher on the outcome) in bins of the absolute
 difference in the predictor, with simultaneous (family-wise) bootstrap
 confidence intervals. These are the points and whiskers drawn by
 `plot(fit, bins = TRUE)` for curves from
-[`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md);
-see its Details for the method.
+[`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md); see
+its Details for the method.
 
 ## Usage
 
@@ -19,7 +19,7 @@ posc_bins(object, level = object$level)
 - object:
 
   A `"posc"` object from
-  [`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md)
+  [`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md)
   created with bins.
 
 - level:

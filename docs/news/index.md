@@ -4,30 +4,29 @@
 
 ### New features
 
-- [`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md)
+- [`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md)
   estimates a POSC directly from raw data, with no normality assumption:
   a spline logistic regression on all pairwise differences (or a random
   subset of `max_pairs` of them for large samples), set up so that P(0)
   = 0.5 and P(-delta) = 1 - P(delta), with a person-level bootstrap
   confidence band.
-- [`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md)
+- [`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md)
   also computes observed proportions in bins of the difference (`bins` =
   number of equal-count bins or a vector of breakpoints).
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws them as
   points with simultaneous (family-wise) confidence intervals, computed
   by a max-t bootstrap on the empirical-logit scale so they are
   asymmetric and stay within \[0, 1\].
-  [`posc_bins()`](https://matthewbjane.github.io/posc/reference/posc_bins.md)
+  [`posc_bins()`](https://matthewbjane.com/posc/reference/posc_bins.md)
   returns them as a table.
 - `plot(x, mark = ...)` highlights chosen differences: a guide line runs
   from the x-axis up to the curve, with the probability labelled (add
   `mark_ci = TRUE` for its confidence interval). Works for single curves
   and comparisons.
-- [`posc_uni()`](https://matthewbjane.github.io/posc/reference/posc_uni.md),
-  [`posc_multi()`](https://matthewbjane.github.io/posc/reference/posc_multi.md),
-  [`posc_lm()`](https://matthewbjane.github.io/posc/reference/posc_lm.md)
-  and
-  [`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md)
+- [`posc_uni()`](https://matthewbjane.com/posc/reference/posc_uni.md),
+  [`posc_multi()`](https://matthewbjane.com/posc/reference/posc_multi.md),
+  [`posc_lm()`](https://matthewbjane.com/posc/reference/posc_lm.md) and
+  [`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md)
   return a `"posc"` object with
   [`print()`](https://rdrr.io/r/base/print.html),
   [`summary()`](https://rdrr.io/r/base/summary.html),
@@ -39,12 +38,11 @@
   probabilities and confidence intervals at any difference.
 - `plot(x, full = TRUE)` draws the full sigmoid over negative and
   positive differences.
-- [`posc_comp()`](https://matthewbjane.github.io/posc/reference/posc_comp.md)
+- [`posc_comp()`](https://matthewbjane.com/posc/reference/posc_comp.md)
   accepts any number of curves (named or with `labels`) and uses a
   homogeneity test of the correlations when there are more than two.
-- [`posc_multi()`](https://matthewbjane.github.io/posc/reference/posc_multi.md)
-  and
-  [`posc_lm()`](https://matthewbjane.github.io/posc/reference/posc_lm.md)
+- [`posc_multi()`](https://matthewbjane.com/posc/reference/posc_multi.md)
+  and [`posc_lm()`](https://matthewbjane.com/posc/reference/posc_lm.md)
   gain `adjust`, which uses the adjusted multiple correlation by default
   to correct the optimism of in-sample R.
 - Redesigned plots: by default just the curve and its confidence band,
@@ -64,13 +62,12 @@
 ### Bug fixes
 
 - The x-axis of
-  [`posc_uni()`](https://matthewbjane.github.io/posc/reference/posc_uni.md),
-  [`posc_multi()`](https://matthewbjane.github.io/posc/reference/posc_multi.md)
-  and
-  [`posc_lm()`](https://matthewbjane.github.io/posc/reference/posc_lm.md)
+  [`posc_uni()`](https://matthewbjane.com/posc/reference/posc_uni.md),
+  [`posc_multi()`](https://matthewbjane.com/posc/reference/posc_multi.md)
+  and [`posc_lm()`](https://matthewbjane.com/posc/reference/posc_lm.md)
   plots was stretched by a factor of sqrt(2) relative to the plotted
   probabilities. Differences are now on the predictor’s own scale.
-- [`posc_lm()`](https://matthewbjane.github.io/posc/reference/posc_lm.md)
+- [`posc_lm()`](https://matthewbjane.com/posc/reference/posc_lm.md)
   referred to an object `mdl` that did not exist and assumed the
   response was named `y`; it now works with any
   [`lm()`](https://rdrr.io/r/stats/lm.html) model.

@@ -81,12 +81,10 @@ An object of class `"posc"`: a list with elements
 
   information about how the curve was computed.
 
-Use
-[plot()](https://matthewbjane.github.io/posc/reference/autoplot.posc.md),
-[summary()](https://matthewbjane.github.io/posc/reference/print.posc.md)
-and
-[predict()](https://matthewbjane.github.io/posc/reference/predict.posc.md)
-to work with it.
+Use [plot()](https://matthewbjane.com/posc/reference/autoplot.posc.md),
+[summary()](https://matthewbjane.com/posc/reference/print.posc.md) and
+[predict()](https://matthewbjane.com/posc/reference/predict.posc.md) to
+work with it.
 
 ## Details
 
@@ -124,7 +122,7 @@ bins of \\\|\Delta\|\\ and the observed proportion of pairs in which the
 person higher on the predictor is also higher on the outcome is computed
 in each bin. `plot(fit, bins = TRUE)` shows these as points with
 whiskers, and
-[`posc_bins()`](https://matthewbjane.github.io/posc/reference/posc_bins.md)
+[`posc_bins()`](https://matthewbjane.com/posc/reference/posc_bins.md)
 returns them as a table. The whiskers are *simultaneous* (family-wise)
 confidence intervals: with probability `level` they cover all of the bin
 proportions at once. They are computed from the same person-level
@@ -150,8 +148,8 @@ only on the linear correlation, is not meaningful in that case.
 
 ## See also
 
-[`posc_uni()`](https://matthewbjane.github.io/posc/reference/posc_uni.md)
-for the curve implied by bivariate normality, which
+[`posc_uni()`](https://matthewbjane.com/posc/reference/posc_uni.md) for
+the curve implied by bivariate normality, which
 `plot(fit, reference = TRUE)` overlays as a dashed line.
 
 ## Examples

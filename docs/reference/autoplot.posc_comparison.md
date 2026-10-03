@@ -29,7 +29,7 @@ plot(x, ...)
 - object, x:
 
   A `"posc_comparison"` object from
-  [`posc_comp()`](https://matthewbjane.github.io/posc/reference/posc_comp.md).
+  [`posc_comp()`](https://matthewbjane.com/posc/reference/posc_comp.md).
 
 - full:
 
@@ -56,7 +56,7 @@ plot(x, ...)
 
   Differences in the predictor to highlight on every curve, and whether
   to add confidence intervals to their labels; see
-  [`autoplot.posc()`](https://matthewbjane.github.io/posc/reference/autoplot.posc.md).
+  [`autoplot.posc()`](https://matthewbjane.com/posc/reference/autoplot.posc.md).
 
 - title, subtitle:
 

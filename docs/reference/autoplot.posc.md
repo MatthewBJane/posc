@@ -55,7 +55,7 @@ plot(x, ...)
 - reference:
 
   For empirical curves from
-  [`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md):
+  [`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md):
   also draw the bivariate-normal POSC with the same Pearson correlation,
   as a dashed line? Off by default.
 
@@ -64,7 +64,7 @@ plot(x, ...)
   For empirical curves fitted with bins: draw the binned observed
   proportions as points, with whiskers showing simultaneous confidence
   intervals (see
-  [`posc_bins()`](https://matthewbjane.github.io/posc/reference/posc_bins.md))?
+  [`posc_bins()`](https://matthewbjane.com/posc/reference/posc_bins.md))?
   Off by default.
 
 - percent:

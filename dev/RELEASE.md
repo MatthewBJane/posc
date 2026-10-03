@@ -35,7 +35,7 @@ the repository link is shared.
 
 On GitHub: repository **Settings > Pages > Build and deployment**: Source
 "Deploy from a branch", branch `main`, folder `/docs`, Save. After a minute
-check <https://matthewbjane.github.io/posc/> and the Paper menu (HTML and PDF).
+check <https://matthewbjane.com/posc/> and the Paper menu (HTML and PDF).
 
 ## 3. CRAN
 

@@ -43,8 +43,7 @@ homogeneity test \\Q = \sum_i (n_i - 3)(z_i - \bar z)^2\\, referred to a
 where \\\bar z\\ is the weighted mean of the \\z_i\\.
 
 Both tests assume the curves come from independent samples. For curves
-from
-[`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md)
+from [`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md)
 the test compares the Pearson correlations, not the shapes of the
 curves. No test is reported if any curve lacks a sample size.
 

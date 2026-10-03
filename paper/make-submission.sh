@@ -24,7 +24,8 @@ mkdir -p submission/source
 cp "$pdf" submission/posc.pdf
 cp "$tex/index.tex" submission/source/posc.tex
 cp "$tex/references.bib" "$tex/jss.cls" "$tex/jss.bst" "$tex/jsslogo.jpg" submission/source/
-cp -R "$tex/index_files" submission/source/
+mkdir -p submission/source/index_files
+cp -R "$tex/index_files/figure-pdf" submission/source/index_files/
 cp replication.R submission/
 
 # Package source tarball, built from the package root (the parent folder).

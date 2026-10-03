@@ -56,24 +56,22 @@ An object of class `"posc"`: a list with elements
 
   information about how the curve was computed.
 
-Use
-[plot()](https://matthewbjane.github.io/posc/reference/autoplot.posc.md),
-[summary()](https://matthewbjane.github.io/posc/reference/print.posc.md)
-and
-[predict()](https://matthewbjane.github.io/posc/reference/predict.posc.md)
-to work with it.
+Use [plot()](https://matthewbjane.com/posc/reference/autoplot.posc.md),
+[summary()](https://matthewbjane.com/posc/reference/print.posc.md) and
+[predict()](https://matthewbjane.com/posc/reference/predict.posc.md) to
+work with it.
 
 ## Details
 
 The fitted values are treated as a single predictor whose correlation
 with the observed outcome is the multiple correlation \\R\\ of the
 model, and the curve is computed as in
-[`posc_uni()`](https://matthewbjane.github.io/posc/reference/posc_uni.md)
+[`posc_uni()`](https://matthewbjane.com/posc/reference/posc_uni.md)
 under bivariate normality. Differences are expressed in the units of the
 outcome (that is, of the fitted values). With `adjust = TRUE` (the
 default) \\R\\ is replaced by the square root of the adjusted \\R^2\\;
 see
-[`posc_multi()`](https://matthewbjane.github.io/posc/reference/posc_multi.md)
+[`posc_multi()`](https://matthewbjane.com/posc/reference/posc_multi.md)
 for why.
 
 ## Examples

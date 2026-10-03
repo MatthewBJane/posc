@@ -26,7 +26,7 @@
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="posc: Probability of Outcome Superiority Curves">
 <meta name="description" content="Computes, plots and compares probability of outcome superiority curves (POSCs). For two people who differ by a given amount on a continuous predictor, a POSC gives the probability that the person with the higher predictor score also has the higher outcome, a probabilistic and decision-oriented alternative to reporting a correlation coefficient. Curves can be computed from a correlation under bivariate normality, from a correlation matrix for an optimally weighted composite of predictors, from a fitted linear model, or estimated directly from raw data with a flexible spline model and bootstrap confidence bands.">
 <meta property="og:description" content="Computes, plots and compares probability of outcome superiority curves (POSCs). For two people who differ by a given amount on a continuous predictor, a POSC gives the probability that the person with the higher predictor score also has the higher outcome, a probabilistic and decision-oriented alternative to reporting a correlation coefficient. Curves can be computed from a correlation under bivariate normality, from a correlation matrix for an optimally weighted composite of predictors, from a fitted linear model, or estimated directly from raw data with a flexible spline model and bootstrap confidence bands.">
-<meta property="og:image" content="https://matthewbjane.github.io/posc/reference/figures/social-preview.png">
+<meta property="og:image" content="https://matthewbjane.com/posc/reference/figures/social-preview.png">
 <meta property="og:image:alt" content="posc: Probability of Outcome Superiority Curves">
 </head>
 <body>
@@ -141,7 +141,7 @@
 <h2 id="examples">Examples<a class="anchor" aria-label="anchor" href="#examples"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://matthewbjane.github.io/posc/">posc</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://matthewbjane.com/posc/">posc</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># From a correlation; differences in raw IQ points (SD = 15)</span></span>
 <span><span class="va">iq</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/posc_uni.html">posc_uni</a></span><span class="op">(</span>r <span class="op">=</span> <span class="fl">0.5</span>, n <span class="op">=</span> <span class="fl">200</span>, sd_x <span class="op">=</span> <span class="fl">15</span>,</span>

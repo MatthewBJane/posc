@@ -42,6 +42,7 @@ methods.
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://matthewbjane.com/posc/}
   \item \url{https://github.com/MatthewBJane/posc}
   \item Report bugs at \url{https://github.com/MatthewBJane/posc/issues}
 }

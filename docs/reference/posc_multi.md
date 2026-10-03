@@ -69,12 +69,10 @@ An object of class `"posc"`: a list with elements
 
   information about how the curve was computed.
 
-Use
-[plot()](https://matthewbjane.github.io/posc/reference/autoplot.posc.md),
-[summary()](https://matthewbjane.github.io/posc/reference/print.posc.md)
-and
-[predict()](https://matthewbjane.github.io/posc/reference/predict.posc.md)
-to work with it.
+Use [plot()](https://matthewbjane.com/posc/reference/autoplot.posc.md),
+[summary()](https://matthewbjane.com/posc/reference/print.posc.md) and
+[predict()](https://matthewbjane.com/posc/reference/predict.posc.md) to
+work with it.
 
 ## Details
 
@@ -83,7 +81,7 @@ multiple correlation \$\$R = \sqrt{\mathbf{r}\_{xy}^\top
 \mathbf{R}\_{xx}^{-1} \mathbf{r}\_{xy}},\$\$ where \\\mathbf{R}\_{xx}\\
 is the predictor intercorrelation matrix and \\\mathbf{r}\_{xy}\\ the
 predictor-outcome correlations. The POSC is then computed as in
-[`posc_uni()`](https://matthewbjane.github.io/posc/reference/posc_uni.md),
+[`posc_uni()`](https://matthewbjane.com/posc/reference/posc_uni.md),
 with differences in the composite expressed in its standard-deviation
 units.
 
@@ -101,8 +99,8 @@ as approximate.
 
 ## See also
 
-[`posc_lm()`](https://matthewbjane.github.io/posc/reference/posc_lm.md)
-to start from a fitted linear model instead.
+[`posc_lm()`](https://matthewbjane.com/posc/reference/posc_lm.md) to
+start from a fitted linear model instead.
 
 ## Examples
 

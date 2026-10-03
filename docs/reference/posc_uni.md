@@ -60,12 +60,10 @@ An object of class `"posc"`: a list with elements
 
   information about how the curve was computed.
 
-Use
-[plot()](https://matthewbjane.github.io/posc/reference/autoplot.posc.md),
-[summary()](https://matthewbjane.github.io/posc/reference/print.posc.md)
-and
-[predict()](https://matthewbjane.github.io/posc/reference/predict.posc.md)
-to work with it.
+Use [plot()](https://matthewbjane.com/posc/reference/autoplot.posc.md),
+[summary()](https://matthewbjane.com/posc/reference/print.posc.md) and
+[predict()](https://matthewbjane.com/posc/reference/predict.posc.md) to
+work with it.
 
 ## Details
 
@@ -84,10 +82,10 @@ interval for \\r\\.
 
 ## See also
 
-[`posc_emp()`](https://matthewbjane.github.io/posc/reference/posc_emp.md)
-for a curve estimated from raw data without assuming normality;
-[`posc_comp()`](https://matthewbjane.github.io/posc/reference/posc_comp.md)
-to compare curves.
+[`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md) for
+a curve estimated from raw data without assuming normality;
+[`posc_comp()`](https://matthewbjane.com/posc/reference/posc_comp.md) to
+compare curves.
 
 ## Examples
 
