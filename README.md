@@ -1,4 +1,4 @@
-# posc: Probability of Outcome Superiority Curves
+# posc: Probability of Outcome Superiority Curves <img src="man/figures/logo.png" align="right" height="139" alt="posc hex logo" />
 
 <!-- badges: start -->
 <!-- badges: end -->

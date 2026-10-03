@@ -19,3 +19,5 @@
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
+^man/figures/social-preview\.png$
+^man/figures/logo-large\.png$

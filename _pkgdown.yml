@@ -3,11 +3,15 @@ url: https://matthewbjane.github.io/posc/
 template:
   bootstrap: 5
   bslib:
-    primary: "#1F5A96"
-    base_font: {google: "Source Sans 3"}
-    heading_font: {google: "Source Sans 3"}
-    code_font: {google: "Source Code Pro"}
+    primary: "#C9553F"       # the logo's coral, darkened for link contrast
+    base_font: {google: "Roboto"}
+    heading_font: {google: "Roboto"}
+    code_font: {google: "Roboto Mono"}
   math-rendering: mathjax
+  opengraph:
+    image:
+      src: man/figures/social-preview.png
+      alt: "posc: Probability of Outcome Superiority Curves"
 
 home:
   title: "posc: Probability of Outcome Superiority Curves"

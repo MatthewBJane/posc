@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Matthew B. Jané">
+<meta name="keywords" content="common language effect size, probability of superiority, correlation, prognosis, clinical prediction, bootstrap, R">
+
+<title>posc: Probability of Outcome Superiority Curves in R</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting-64a204ab8560d761af7679ceaba22944.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap-c2e55264ed47ce3b2e0326a2269f9400.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="site_libs/quarto-contrib/glightbox/glightbox.min.js"></script>
+<link href="site_libs/quarto-contrib/glightbox/glightbox.min.css" rel="stylesheet">
+<link href="site_libs/quarto-contrib/glightbox/lightbox.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<meta name="citation_title" content="[posc]{.pkg}: Probability of Outcome Superiority Curves in [R]{.proglang}">
+<meta name="citation_abstract" content="The relationship between a continuous predictor and a continuous outcome is conventionally summarized by a correlation coefficient, which is difficult to interpret in terms of the decisions it is meant to inform. Common language effect sizes express an effect as a probability. The existing common language effect size for correlations is the probability that a person who scores higher than another person on the predictor also scores higher on the outcome. This probability is a single number, but in practice it depends on how far apart the two people are on the predictor. This paper introduces the probability of outcome superiority curve (POSC), which gives the probability that the person with the higher predictor score has the higher outcome as a function of the difference between the two people on the predictor, and presents its implementation in the [R]{.proglang} package [posc]{.pkg}. The curve is derived under bivariate normality for a single predictor, for a composite of several predictors, and for the predictions of a linear model, with confidence bands based on the Fisher transformation. An empirical POSC is also developed that is estimated from raw data without a distributional assumption, using a symmetry-constrained spline model fitted to all pairs of observations with bootstrap confidence bands, and that recovers the shape of nonlinear and nonmonotone relationships that a correlation cannot describe. The existing common language effect size for correlations is shown to be the POSC averaged over the distribution of differences in the predictor. The package provides constructors for each type of curve, a common class with print, summary, plot and predict methods, and functions for comparing curves. Its use is illustrated with four clinical examples, namely prioritizing patients with a prognostic score, combining prognostic measures, the survival of lung cancer patients as a function of performance status, and a dose-response relationship with an optimum.
+">
+<meta name="citation_keywords" content="common language effect size,probability of superiority,correlation,prognosis,clinical prediction,bootstrap,R">
+<meta name="citation_author" content="Matthew B. Jané">
+<meta name="citation_language" content="en">
+<meta name="citation_reference" content="citation_title=A common language effect size statistic;,citation_author=Kenneth O. McGraw;,citation_author=S. P. Wong;,citation_publication_date=1992;,citation_cover_date=1992;,citation_year=1992;,citation_issue=2;,citation_doi=10.1037/0033-2909.111.2.361;,citation_volume=111;,citation_journal_title=Psychological Bulletin;">
+<meta name="citation_reference" content="citation_title=Generalizing the common language effect size indicator to bivariate normal correlations;,citation_author=William P. Dunlap;,citation_publication_date=1994;,citation_cover_date=1994;,citation_year=1994;,citation_issue=3;,citation_doi=10.1037/0033-2909.116.3.509;,citation_volume=116;,citation_journal_title=Psychological Bulletin;">
+<meta name="citation_reference" content="citation_title=Probability of the superior outcome of one treatment over another;,citation_author=Robert J. Grissom;,citation_publication_date=1994;,citation_cover_date=1994;,citation_year=1994;,citation_issue=2;,citation_doi=10.1037/0021-9010.79.2.314;,citation_volume=79;,citation_journal_title=Journal of Applied Psychology;">
+<meta name="citation_reference" content="citation_title=A critique and improvement of the CL common language effect size statistics of McGraw and Wong;,citation_author=András Vargha;,citation_author=Harold D. Delaney;,citation_publication_date=2000;,citation_cover_date=2000;,citation_year=2000;,citation_issue=2;,citation_doi=10.3102/10769986025002101;,citation_volume=25;,citation_journal_title=Journal of Educational and Behavioral Statistics;">
+<meta name="citation_reference" content="citation_title=A probability-based measure of effect size: Robustness to base rates and other factors;,citation_author=John Ruscio;,citation_publication_date=2008;,citation_cover_date=2008;,citation_year=2008;,citation_issue=1;,citation_doi=10.1037/1082-989X.13.1.19;,citation_volume=13;,citation_journal_title=Psychological Methods;">
+<meta name="citation_reference" content="citation_title=Probability of bivariate superiority: A non-parametric common-language statistic for detecting bivariate relationships;,citation_author=Johnson Ching-Hong Li;,citation_author=Rory M. Waisman;,citation_publication_date=2019;,citation_cover_date=2019;,citation_year=2019;,citation_issue=1;,citation_doi=10.3758/s13428-018-1089-5;,citation_volume=51;,citation_journal_title=Behavior Research Methods;">
+<meta name="citation_reference" content="citation_title=A new measure of rank correlation;,citation_author=Maurice G. Kendall;,citation_publication_date=1938;,citation_cover_date=1938;,citation_year=1938;,citation_issue=1–2;,citation_doi=10.1093/biomet/30.1-2.81;,citation_volume=30;,citation_journal_title=Biometrika;">
+<meta name="citation_reference" content="citation_title=On the “probable error” of a coefficient of correlation deduced from a small sample;,citation_author=Ronald A. Fisher;,citation_publication_date=1921;,citation_cover_date=1921;,citation_year=1921;,citation_volume=1;,citation_journal_title=Metron;">
+<meta name="citation_reference" content="citation_title=Statistical power analysis for the behavioral sciences;,citation_author=Jacob Cohen;,citation_publication_date=1988;,citation_cover_date=1988;,citation_year=1988;">
+<meta name="citation_reference" content="citation_title=Applied multiple regression/correlation analysis for the behavioral sciences;,citation_author=Jacob Cohen;,citation_author=Patricia Cohen;,citation_author=Stephen G. West;,citation_author=Leona S. Aiken;,citation_publication_date=2003;,citation_cover_date=2003;,citation_year=2003;">
+<meta name="citation_reference" content="citation_title=Bootstrap methods: Another look at the jackknife;,citation_author=Bradley Efron;,citation_publication_date=1979;,citation_cover_date=1979;,citation_year=1979;,citation_issue=1;,citation_doi=10.1214/aos/1176344552;,citation_volume=7;,citation_journal_title=The Annals of Statistics;">
+<meta name="citation_reference" content="citation_title=An introduction to the bootstrap;,citation_author=Bradley Efron;,citation_author=Robert J. Tibshirani;,citation_publication_date=1993;,citation_cover_date=1993;,citation_year=1993;">
+<meta name="citation_reference" content="citation_title=The elements of statistical learning: Data mining, inference, and prediction;,citation_author=Trevor Hastie;,citation_author=Robert Tibshirani;,citation_author=Jerome Friedman;,citation_publication_date=2009;,citation_cover_date=2009;,citation_year=2009;">
+<meta name="citation_reference" content="citation_title=Simultaneous confidence bands: Theory, implementation, and an application to SVARs;,citation_author=José Luis Montiel Olea;,citation_author=Mikkel Plagborg-Møller;,citation_publication_date=2019;,citation_cover_date=2019;,citation_year=2019;,citation_issue=1;,citation_doi=10.1002/jae.2656;,citation_volume=34;,citation_journal_title=Journal of Applied Econometrics;">
+<meta name="citation_reference" content="citation_title=R: A language and environment for statistical computing;,citation_author=R Core Team;,citation_publication_date=2026;,citation_cover_date=2026;,citation_year=2026;,citation_fulltext_html_url=https://www.R-project.org/;">
+<meta name="citation_reference" content="citation_title=Posc: Probability of outcome superiority curves;,citation_author=Matthew B. Jané;,citation_publication_date=2026;,citation_cover_date=2026;,citation_year=2026;,citation_fulltext_html_url=https://github.com/MatthewBJane/posc;">
+<meta name="citation_reference" content="citation_title=ggplot2: Elegant graphics for data analysis;,citation_author=Hadley Wickham;,citation_publication_date=2016;,citation_cover_date=2016;,citation_year=2016;">
+<meta name="citation_reference" content="citation_title=Effectsize: Estimation of effect size indices and standardized parameters;,citation_author=Mattan S. Ben-Shachar;,citation_author=Daniel Lüdecke;,citation_author=Dominique Makowski;,citation_publication_date=2020;,citation_cover_date=2020;,citation_year=2020;,citation_issue=56;,citation_doi=10.21105/joss.02815;,citation_volume=5;,citation_journal_title=Journal of Open Source Software;">
+<meta name="citation_reference" content="citation_title=Patchwork: The composer of plots;,citation_author=Thomas Lin Pedersen;,citation_publication_date=2024;,citation_cover_date=2024;,citation_year=2024;,citation_fulltext_html_url=https://CRAN.R-project.org/package=patchwork;">
+<meta name="citation_reference" content="citation_title=ggplot2: Create elegant data visualisations using the grammar of graphics;,citation_author=Hadley Wickham;,citation_author=Winston Chang;,citation_author=Lionel Henry;,citation_author=Thomas Lin Pedersen;,citation_author=Kohske Takahashi;,citation_author=Claus Wilke;,citation_author=Kara Woo;,citation_author=Hiroaki Yutani;,citation_author=Dewey Dunnington;,citation_author=Teun Brand;,citation_publication_date=2025;,citation_cover_date=2025;,citation_year=2025;,citation_fulltext_html_url=https://CRAN.R-project.org/package=ggplot2;">
+<meta name="citation_reference" content="citation_title=Evaluating the yield of medical tests;,citation_author=Frank E. Harrell;,citation_author=Robert M. Califf;,citation_author=David B. Pryor;,citation_author=Kerry L. Lee;,citation_author=Robert A. Rosati;,citation_publication_date=1982;,citation_cover_date=1982;,citation_year=1982;,citation_issue=18;,citation_volume=247;,citation_journal_title=JAMA;">
+<meta name="citation_reference" content="citation_title=Modern applied statistics with S;,citation_author=William N. Venables;,citation_author=Brian D. Ripley;,citation_publication_date=2002;,citation_cover_date=2002;,citation_year=2002;">
+<meta name="citation_reference" content="citation_title=Geomtextpath: Curved text in ggplot2;,citation_author=Allan Cameron;,citation_author=Teun Brand;,citation_publication_date=2025;,citation_cover_date=2025;,citation_year=2025;,citation_fulltext_html_url=https://CRAN.R-project.org/package=geomtextpath;">
+</head>
+
+<body class="quarto-light">
+
+<header id="title-block-header" class="quarto-title-block default toc-left page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title"><code>posc</code>: Probability of Outcome Superiority Curves in <code>R</code></h1>
+          </div>
+
+    
+    <div class="quarto-title-meta-container">
+      <div class="quarto-title-meta-column-start">
+            <div class="quarto-title-meta-author">
+          <div class="quarto-title-meta-heading">Author</div>
+          <div class="quarto-title-meta-heading">Affiliation</div>
+          
+                <div class="quarto-title-meta-contents">
+            <p class="author"><a href="https://matthewbjane.com">Matthew B. Jané</a> <a href="mailto:matthew.jane@uconn.edu" class="quarto-title-author-email"><i class="bi bi-envelope"></i></a> </p>
+          </div>
+                <div class="quarto-title-meta-contents">
+                    <p class="affiliation">
+                        University of Connecticut
+                      </p>
+                  </div>
+                    </div>
+        
+        <div class="quarto-title-meta">
+
+                      
+          
+                
+              </div>
+      </div>
+      <div class="quarto-title-meta-column-end quarto-other-formats-target">
+      <div class="quarto-alternate-formats"><div class="quarto-title-meta-heading">Other Formats</div><div class="quarto-title-meta-contents"><p><a href="index.pdf"><i class="bi bi-file-pdf"></i>PDF (jss)</a></p></div></div></div>
+    </div>
+
+    <div>
+      <div class="abstract">
+        <div class="block-title">Abstract</div>
+        <p>The relationship between a continuous predictor and a continuous outcome is conventionally summarized by a correlation coefficient, which is difficult to interpret in terms of the decisions it is meant to inform. Common language effect sizes express an effect as a probability. The existing common language effect size for correlations is the probability that a person who scores higher than another person on the predictor also scores higher on the outcome. This probability is a single number, but in practice it depends on how far apart the two people are on the predictor. This paper introduces the probability of outcome superiority curve (POSC), which gives the probability that the person with the higher predictor score has the higher outcome as a function of the difference between the two people on the predictor, and presents its implementation in the <code>R</code> package <code>posc</code>. The curve is derived under bivariate normality for a single predictor, for a composite of several predictors, and for the predictions of a linear model, with confidence bands based on the Fisher transformation. An empirical POSC is also developed that is estimated from raw data without a distributional assumption, using a symmetry-constrained spline model fitted to all pairs of observations with bootstrap confidence bands, and that recovers the shape of nonlinear and nonmonotone relationships that a correlation cannot describe. The existing common language effect size for correlations is shown to be the POSC averaged over the distribution of differences in the predictor. The package provides constructors for each type of curve, a common class with print, summary, plot and predict methods, and functions for comparing curves. Its use is illustrated with four clinical examples, namely prioritizing patients with a prognostic score, combining prognostic measures, the survival of lung cancer patients as a function of performance status, and a dose-response relationship with an optimum.</p>
+      </div>
+    </div>
+
+    <div>
+      <div class="keywords">
+        <div class="block-title">Keywords</div>
+        <p>common language effect size, probability of superiority, correlation, prognosis, clinical prediction, bootstrap, R</p>
+      </div>
+    </div>
+
+    <div class="quarto-other-links-text-target">
+    </div>  </div>
+</header><div id="quarto-content" class="page-columns page-rows-contents page-layout-article toc-left">
+<div id="quarto-sidebar-toc-left" class="sidebar toc-left">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#introduction" id="toc-introduction" class="nav-link active" data-scroll-target="#introduction"><span class="header-section-number">1</span> Introduction</a></li>
+  <li><a href="#sec-posc" id="toc-sec-posc" class="nav-link" data-scroll-target="#sec-posc"><span class="header-section-number">2</span> Probability of outcome superiority curves</a>
+  <ul class="collapse">
+  <li><a href="#definition-and-properties" id="toc-definition-and-properties" class="nav-link" data-scroll-target="#definition-and-properties"><span class="header-section-number">2.1</span> Definition and properties</a></li>
+  <li><a href="#sec-normal" id="toc-sec-normal" class="nav-link" data-scroll-target="#sec-normal"><span class="header-section-number">2.2</span> Bivariate normality</a></li>
+  <li><a href="#sec-multi" id="toc-sec-multi" class="nav-link" data-scroll-target="#sec-multi"><span class="header-section-number">2.3</span> Composites of several predictors</a></li>
+  <li><a href="#sec-lm" id="toc-sec-lm" class="nav-link" data-scroll-target="#sec-lm"><span class="header-section-number">2.4</span> Predictions of a linear model</a></li>
+  </ul></li>
+  <li><a href="#sec-empirical" id="toc-sec-empirical" class="nav-link" data-scroll-target="#sec-empirical"><span class="header-section-number">3</span> Empirical POSCs</a>
+  <ul class="collapse">
+  <li><a href="#motivation" id="toc-motivation" class="nav-link" data-scroll-target="#motivation"><span class="header-section-number">3.1</span> Motivation</a></li>
+  <li><a href="#pairwise-construction-and-model" id="toc-pairwise-construction-and-model" class="nav-link" data-scroll-target="#pairwise-construction-and-model"><span class="header-section-number">3.2</span> Pairwise construction and model</a></li>
+  <li><a href="#confidence-bands-and-binned-checks" id="toc-confidence-bands-and-binned-checks" class="nav-link" data-scroll-target="#confidence-bands-and-binned-checks"><span class="header-section-number">3.3</span> Confidence bands and binned checks</a></li>
+  <li><a href="#sec-nonmonotone" id="toc-sec-nonmonotone" class="nav-link" data-scroll-target="#sec-nonmonotone"><span class="header-section-number">3.4</span> Nonmonotone relationships</a></li>
+  </ul></li>
+  <li><a href="#sec-software" id="toc-sec-software" class="nav-link" data-scroll-target="#sec-software"><span class="header-section-number">4</span> Software</a>
+  <ul class="collapse">
+  <li><a href="#design" id="toc-design" class="nav-link" data-scroll-target="#design"><span class="header-section-number">4.1</span> Design</a></li>
+  <li><a href="#basic-use" id="toc-basic-use" class="nav-link" data-scroll-target="#basic-use"><span class="header-section-number">4.2</span> Basic use</a></li>
+  </ul></li>
+  <li><a href="#sec-illustrations" id="toc-sec-illustrations" class="nav-link" data-scroll-target="#sec-illustrations"><span class="header-section-number">5</span> Illustrations</a>
+  <ul class="collapse">
+  <li><a href="#prioritizing-patients-with-a-prognostic-score" id="toc-prioritizing-patients-with-a-prognostic-score" class="nav-link" data-scroll-target="#prioritizing-patients-with-a-prognostic-score"><span class="header-section-number">5.1</span> Prioritizing patients with a prognostic score</a></li>
+  <li><a href="#comparing-prognostic-measures" id="toc-comparing-prognostic-measures" class="nav-link" data-scroll-target="#comparing-prognostic-measures"><span class="header-section-number">5.2</span> Comparing prognostic measures</a></li>
+  <li><a href="#composites-and-linear-models" id="toc-composites-and-linear-models" class="nav-link" data-scroll-target="#composites-and-linear-models"><span class="header-section-number">5.3</span> Composites and linear models</a></li>
+  <li><a href="#an-empirical-posc-performance-status-and-survival" id="toc-an-empirical-posc-performance-status-and-survival" class="nav-link" data-scroll-target="#an-empirical-posc-performance-status-and-survival"><span class="header-section-number">5.4</span> An empirical POSC: performance status and survival</a></li>
+  </ul></li>
+  <li><a href="#sec-summary" id="toc-sec-summary" class="nav-link" data-scroll-target="#sec-summary"><span class="header-section-number">6</span> Summary and discussion</a></li>
+  <li><a href="#sec-computational" id="toc-sec-computational" class="nav-link" data-scroll-target="#sec-computational"><span class="header-section-number">7</span> Computational details</a></li>
+  <li><a href="#acknowledgments" id="toc-acknowledgments" class="nav-link" data-scroll-target="#acknowledgments">Acknowledgments</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
+  </ul>
+</nav>
+</div>
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar zindex-bottom">
+</div>
+<main class="content quarto-banner-title-block" id="quarto-document-content">
+
+
+
+  
+
+
+<section id="introduction" class="level2" data-number="1">
+<h2 data-number="1" class="anchored" data-anchor-id="introduction"><span class="header-section-number">1</span> Introduction</h2>
+<p>A correlation coefficient is a summary statistic between <span class="math inline">\(-1\)</span> and <span class="math inline">\(1\)</span> that describes the magnitude and direction of the linear association between two variables. Commonly used benchmarks interpret correlations of 0.1 as small, 0.3 as medium and 0.5 as large <span class="citation" data-cites="cohen1988">(<a href="#ref-cohen1988" role="doc-biblioref">Cohen 1988</a>)</span>, but these labels say nothing about what the relationship means for a decision or a given application. Clinicians frequently have to choose between patients when a resource is limited. For instance, a rehabilitation program has one place available, a scarce treatment can be offered to only one of two patients, or a waiting list must be ordered by expected benefit. Suppose that a prognostic score correlates 0.50 with recovery after a treatment and that two patients differ on the score. The clinician making the choice needs to know the probability that the patient with the higher score will recover better, and whether that probability is large enough to justify giving that patient priority.</p>
+<p>Common language effect sizes address questions of this kind by expressing an effect as a probability. The original and most widely used version is the <em>probability of superiority</em> for two groups <span class="citation" data-cites="mcgraw1992 grissom1994 vargha2000">(<a href="#ref-mcgraw1992" role="doc-biblioref">McGraw and Wong 1992</a>; <a href="#ref-grissom1994" role="doc-biblioref">Grissom 1994</a>; <a href="#ref-vargha2000" role="doc-biblioref">Vargha and Delaney 2000</a>)</span>, defined as the probability that a randomly sampled person from one group scores higher than a randomly sampled person from the other group. Let <span class="math inline">\(Y^{(1)}\)</span> and <span class="math inline">\(Y^{(0)}\)</span> denote the outcome of a randomly sampled person from the treatment and control group, respectively. The probability of superiority is <span id="eq-ps"><span class="math display">\[
+\theta = P\!\left(Y^{(1)} &gt; Y^{(0)}\right).
+\tag{1}\]</span></span> A value of 0.5 means that the two groups are indistinguishable, and a value of 0.75 means that the person from the treatment group has the higher score in three pairs out of four. When the outcome is normally distributed in both groups with a common standard deviation, the probability of superiority is a function of the standardized mean difference <span class="math inline">\(\delta = (\mu_1 - \mu_0)/\sigma\)</span> <span class="citation" data-cites="grissom1994 ruscio2008">(<a href="#ref-grissom1994" role="doc-biblioref">Grissom 1994</a>; <a href="#ref-ruscio2008" role="doc-biblioref">Ruscio 2008</a>)</span>, <span id="eq-ps-normal"><span class="math display">\[
+\theta = \Phi\!\left(\frac{\delta}{\sqrt{2}}\right),
+\tag{2}\]</span></span> where <span class="math inline">\(\Phi\)</span> is the cumulative distribution function of the standard normal distribution. The factor <span class="math inline">\(\sqrt{2}\)</span> arises because the difference between two independent draws has twice the variance of a single draw.</p>
+<p><span class="citation" data-cites="dunlap1994">Dunlap (<a href="#ref-dunlap1994" role="doc-biblioref">1994</a>)</span> generalized this effect size to the relationship between two continuous variables <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. Let <span class="math inline">\((X_1, Y_1)\)</span> and <span class="math inline">\((X_2, Y_2)\)</span> be the scores of two randomly sampled people. The <em>bivariate probability of superiority</em> is the probability that the person with the higher predictor score also has the higher outcome, <span id="eq-pbs"><span class="math display">\[
+\theta_b = P\!\left(Y_1 &gt; Y_2 \mid X_1 &gt; X_2\right).
+\tag{3}\]</span></span> This is the probability that a randomly sampled pair is concordant, and it is related to Kendall’s rank correlation by <span class="math inline">\(\tau = 2\theta_b - 1\)</span> <span class="citation" data-cites="kendall1938">(<a href="#ref-kendall1938" role="doc-biblioref">Kendall 1938</a>)</span>. If <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are bivariate normal with correlation <span class="math inline">\(\rho\)</span>, then <span id="eq-pbs-normal"><span class="math display">\[
+\theta_b = \frac{1}{2} + \frac{\arcsin(\rho)}{\pi},
+\tag{4}\]</span></span> so that a correlation of 0.50 corresponds to <span class="math inline">\(\theta_b = 0.67\)</span> and a correlation of 0.8 to <span class="math inline">\(\theta_b = 0.80\)</span> <span class="citation" data-cites="dunlap1994">(<a href="#ref-dunlap1994" role="doc-biblioref">Dunlap 1994</a>)</span>. Under bivariate normality this is also the probability that a person who is above the mean on <span class="math inline">\(X\)</span> is above the mean on <span class="math inline">\(Y\)</span>, which is the quantity that <span class="citation" data-cites="li2019">Li and Waisman (<a href="#ref-li2019" role="doc-biblioref">2019</a>)</span> estimate without the normality assumption.</p>
+<p><a href="#eq-pbs" class="quarto-xref">Equation&nbsp;3</a> is a useful summary, but it does not answer the question that arises in a decision between two specific people. In the clinical example, the probability that the higher scorer recovers better is not the same when the two patients differ by one point as when they differ by thirty points on the prognostic score, and the bivariate probability of superiority averages over all such differences. The quantity needed for the decision is the probability of superiority at the observed difference between the two patients.</p>
+<p>This paper introduces the probability of outcome superiority curve (POSC), which is the conditional probability that the person with the higher predictor score has the higher outcome, expressed as a function of the difference in the predictor, and describes the <code>R</code> package <code>posc</code> <span class="citation" data-cites="posc">(<a href="#ref-posc" role="doc-biblioref">Jané 2026</a>)</span> that implements it. The package is available from the Comprehensive <code>R</code> Archive Network (CRAN) at <a href="https://CRAN.R-project.org/package=posc" class="uri">https://CRAN.R-project.org/package=posc</a>. <a href="#sec-posc" class="quarto-xref">Section&nbsp;2</a> defines the curve, establishes properties that hold for any joint distribution, and derives the curve under bivariate normality for a single predictor, for a composite of several predictors and for the predictions of a linear model. <a href="#sec-empirical" class="quarto-xref">Section&nbsp;3</a> develops an empirical version that is estimated from raw data without a distributional assumption. <a href="#sec-software" class="quarto-xref">Section&nbsp;4</a> describes the design of the package, <a href="#sec-illustrations" class="quarto-xref">Section&nbsp;5</a> illustrates it with clinical examples, and <a href="#sec-summary" class="quarto-xref">Section&nbsp;6</a> concludes. Existing <code>R</code> software for common language effect sizes, for example the <code>effectsize</code> package <span class="citation" data-cites="benshachar2020">(<a href="#ref-benshachar2020" role="doc-biblioref">Ben-Shachar et al. 2020</a>)</span>, implements the probability of superiority for group differences. To my knowledge, no software implements the curve for correlations.</p>
+</section>
+<section id="sec-posc" class="level2" data-number="2">
+<h2 data-number="2" class="anchored" data-anchor-id="sec-posc"><span class="header-section-number">2</span> Probability of outcome superiority curves</h2>
+<section id="definition-and-properties" class="level3" data-number="2.1">
+<h3 data-number="2.1" class="anchored" data-anchor-id="definition-and-properties"><span class="header-section-number">2.1</span> Definition and properties</h3>
+<p>Let <span class="math inline">\((X_1, Y_1)\)</span> and <span class="math inline">\((X_2, Y_2)\)</span> be the predictor and outcome scores of two people sampled independently from the same population, and let <span class="math inline">\(\Delta = X_1 - X_2\)</span> be their difference on the predictor. The probability of outcome superiority curve is the conditional probability that the first person has the higher outcome, as a function of the difference in the predictor: <span id="eq-posc"><span class="math display">\[
+\theta(\Delta) = P\!\left(Y_1 &gt; Y_2 \mid X_1 - X_2 = \Delta\right).
+\tag{5}\]</span></span> For a positive relationship the curve equals 0.5 when the two people have the same predictor score and increases toward 1 as the difference increases. The curve answers the clinician’s question directly. If patient A scores <span class="math inline">\(\Delta\)</span> points higher than patient B on a prognostic score, <span class="math inline">\(\theta(\Delta)\)</span> is the probability that patient A will have the better outcome.</p>
+<p>Three properties hold for every POSC, regardless of the joint distribution of <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>, provided that the outcome is continuous. First, <span class="math inline">\(\theta(0) = 1/2\)</span>, two people with the same predictor score are equally likely to have the higher outcome. Second, because the two people are exchangeable, <span id="eq-symmetry"><span class="math display">\[
+\theta(-\Delta) = 1 - \theta(\Delta).
+\tag{6}\]</span></span> If the first person is <span class="math inline">\(\Delta\)</span> points below the second, the probability that the first person has the higher outcome is one minus the probability for the pair with the roles reversed. The curve is therefore point-symmetric about <span class="math inline">\((0, 1/2)\)</span>, and when it is monotone it is a sigmoid with its inflection point at <span class="math inline">\(\Delta = 0\)</span>. The half of the curve over <span class="math inline">\(\Delta \geq 0\)</span> contains all of the information, and it is the half that the package plots by default, but the full curve is sometimes more informative to display (<a href="#fig-family" class="quarto-xref">Figure&nbsp;2</a>, right). Third, the bivariate probability of superiority is the POSC averaged over the distribution of the difference between two randomly sampled people, <span id="eq-average"><span class="math display">\[
+\theta_b = E\!\left[\theta(\Delta) \mid \Delta &gt; 0\right],
+\tag{7}\]</span></span> which follows from <a href="#eq-pbs" class="quarto-xref">Equation&nbsp;3</a> by conditioning on <span class="math inline">\(\Delta\)</span>. That is, Dunlap’s single value is the average of the POSC, weighted by how often each difference occurs. Two populations can have the same <span class="math inline">\(\theta_b\)</span> and very different curves, which is why the curve is the more informative summary.</p>
+</section>
+<section id="sec-normal" class="level3" data-number="2.2">
+<h3 data-number="2.2" class="anchored" data-anchor-id="sec-normal"><span class="header-section-number">2.2</span> Bivariate normality</h3>
+<p>Assume that <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span> are bivariate normal with means <span class="math inline">\(\mu_X\)</span> and <span class="math inline">\(\mu_Y\)</span>, standard deviations <span class="math inline">\(\sigma_X\)</span> and <span class="math inline">\(\sigma_Y\)</span>, and correlation <span class="math inline">\(\rho\)</span>. Because the two people are independent draws from the same bivariate normal distribution, their differences <span class="math inline">\((X_1 - X_2, Y_1 - Y_2)\)</span> are also bivariate normal, with means of zero, variances <span class="math inline">\(2\sigma_X^2\)</span> and <span class="math inline">\(2\sigma_Y^2\)</span>, and the same correlation <span class="math inline">\(\rho\)</span>. The conditional distribution of a bivariate normal variable given the other variable is normal, so that <span id="eq-conditional"><span class="math display">\[
+Y_1 - Y_2 \mid \Delta \;\sim\; \mathcal{N}\!\left(\rho\,\frac{\sigma_Y}{\sigma_X}\,\Delta,\; 2\sigma_Y^2(1 - \rho^2)\right).
+\tag{8}\]</span></span> <a href="#fig-conditionals" class="quarto-xref">Figure&nbsp;1</a> shows this relationship for two people with predictor scores <span class="math inline">\(X_1\)</span> and <span class="math inline">\(X_2\)</span>, for a small and a large difference <span class="math inline">\(\Delta\)</span>. The conditional distributions of the outcome are two normal distributions with the same variance, whose means are separated in proportion to <span class="math inline">\(\rho\)</span> and to <span class="math inline">\(\Delta\)</span>. The POSC is the probability that the difference in <a href="#eq-conditional" class="quarto-xref">Equation&nbsp;8</a> is positive, which is the area of its distribution above zero, and this area increases with <span class="math inline">\(\Delta\)</span>: <span id="eq-posc-normal"><span class="math display">\[
+\theta(\Delta) = \Phi\!\left(\frac{\rho\,\Delta}{\sigma_X\sqrt{2(1 - \rho^2)}}\right).
+\tag{9}\]</span></span> The quantity <span class="math inline">\(\rho\Delta / (\sigma_X\sqrt{1 - \rho^2})\)</span> is the standardized mean difference between the two conditional outcome distributions in <a href="#fig-conditionals" class="quarto-xref">Figure&nbsp;1</a>, so the POSC is the probability of superiority of <a href="#eq-ps-normal" class="quarto-xref">Equation&nbsp;2</a> applied to those two distributions. In other words, at each difference in the predictor, the correlation is converted into a comparison between two groups. Averaging <a href="#eq-posc-normal" class="quarto-xref">Equation&nbsp;9</a> over the half-normal distribution of <span class="math inline">\(|\Delta|/\sigma_X\)</span> gives <a href="#eq-pbs-normal" class="quarto-xref">Equation&nbsp;4</a>, as <a href="#eq-average" class="quarto-xref">Equation&nbsp;7</a> requires.</p>
+<div id="cell-fig-conditionals" class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-conditionals" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-conditionals-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="index_files/figure-html/fig-conditionals-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-1" title="Figure&nbsp;1: From the bivariate normal distribution to the POSC, for \rho = 0.5 and a predictor in standard deviation units. Panels A to C concern two people whose predictor scores differ by a small amount, \Delta = X_1 - X_2 = 0.5\sigma_X; panels D to F concern two people who differ by a large amount, \Delta = 2\sigma_X. A, D: contours of the joint distribution of X and Y; the dashed lines mark the predictor scores X_2 (blue) and X_1 (red) of the two people, and the points mark the conditional means of the outcome. B, E: the conditional distributions of the outcome, Y \mid X_2 (blue) and Y \mid X_1 (red), which are normal with the same variance and with means separated in proportion to \rho\Delta. C, F: the distribution of the difference Y_1 - Y_2 given \Delta, Equation&nbsp;8; the shaded area above zero is \theta(\Delta) = P(Y_1 > Y_2 \mid \Delta), Equation&nbsp;9, which increases from 0.58 to 0.79 as \Delta increases. G: the POSC for \rho = 0.5 with the two differences marked; the shaded areas in C and F are the heights of the curve at those differences."><img src="index_files/figure-html/fig-conditionals-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="2700"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-conditionals-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: From the bivariate normal distribution to the POSC, for <span class="math inline">\(\rho = 0.5\)</span> and a predictor in standard deviation units. Panels A to C concern two people whose predictor scores differ by a small amount, <span class="math inline">\(\Delta = X_1 - X_2 = 0.5\sigma_X\)</span>; panels D to F concern two people who differ by a large amount, <span class="math inline">\(\Delta = 2\sigma_X\)</span>. A, D: contours of the joint distribution of <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>; the dashed lines mark the predictor scores <span class="math inline">\(X_2\)</span> (blue) and <span class="math inline">\(X_1\)</span> (red) of the two people, and the points mark the conditional means of the outcome. B, E: the conditional distributions of the outcome, <span class="math inline">\(Y \mid X_2\)</span> (blue) and <span class="math inline">\(Y \mid X_1\)</span> (red), which are normal with the same variance and with means separated in proportion to <span class="math inline">\(\rho\Delta\)</span>. C, F: the distribution of the difference <span class="math inline">\(Y_1 - Y_2\)</span> given <span class="math inline">\(\Delta\)</span>, <a href="#eq-conditional" class="quarto-xref">Equation&nbsp;8</a>; the shaded area above zero is <span class="math inline">\(\theta(\Delta) = P(Y_1 &gt; Y_2 \mid \Delta)\)</span>, <a href="#eq-posc-normal" class="quarto-xref">Equation&nbsp;9</a>, which increases from 0.58 to 0.79 as <span class="math inline">\(\Delta\)</span> increases. G: the POSC for <span class="math inline">\(\rho = 0.5\)</span> with the two differences marked; the shaded areas in C and F are the heights of the curve at those differences.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p><a href="#fig-family" class="quarto-xref">Figure&nbsp;2</a> (left) shows the curve for several values of <span class="math inline">\(\rho\)</span> with the predictor in standard deviation units. A correlation of 0.3, conventionally described as medium, gives a person who is one standard deviation higher on the predictor only a 59% probability of the higher outcome. The curves for different correlations differ little near <span class="math inline">\(\Delta = 0\)</span> and differ most at large differences, so the practical value of a stronger predictor lies mainly in the probabilities it provides for people who are far apart on the predictor. Inverting <a href="#eq-posc-normal" class="quarto-xref">Equation&nbsp;9</a> gives the difference required to reach a given probability, <span id="eq-inverse"><span class="math display">\[
+\Delta(\theta) = \frac{\sigma_X\sqrt{2(1-\rho^2)}}{\rho}\,\Phi^{-1}(\theta),
+\tag{10}\]</span></span> which answers questions such as how far apart two patients’ scores must be before the probability of correctly identifying the patient with the better outcome reaches 75%. For <span class="math inline">\(\rho = 0.5\)</span> the required difference is 1.65 standard deviations.</p>
+<div id="cell-fig-family" class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-family" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-family-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="index_files/figure-html/fig-family-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-2" title="Figure&nbsp;2: Normal-theory POSCs. Left: curves for population correlations \rho from 0.1 to 0.9 over differences of 0 to 3 standard deviations of the predictor, each labelled along its path. Right: the full curve for \rho = 0.5 estimated from n = 100, over negative and positive differences, with its 95% confidence band. The curve passes through 0.5 at a difference of zero and is point-symmetric about that point, so the two halves carry the same information. Marked points show the probabilities at differences of one standard deviation in each direction."><img src="index_files/figure-html/fig-family-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="3000"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-family-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: Normal-theory POSCs. Left: curves for population correlations <span class="math inline">\(\rho\)</span> from 0.1 to 0.9 over differences of 0 to 3 standard deviations of the predictor, each labelled along its path. Right: the full curve for <span class="math inline">\(\rho = 0.5\)</span> estimated from <span class="math inline">\(n = 100\)</span>, over negative and positive differences, with its 95% confidence band. The curve passes through 0.5 at a difference of zero and is point-symmetric about that point, so the two halves carry the same information. Marked points show the probabilities at differences of one standard deviation in each direction.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<section id="estimation-and-confidence-bands" class="level4" data-number="2.2.1">
+<h4 data-number="2.2.1" class="anchored" data-anchor-id="estimation-and-confidence-bands"><span class="header-section-number">2.2.1</span> Estimation and confidence bands</h4>
+<p>A sample estimate is obtained by replacing <span class="math inline">\(\rho\)</span> and <span class="math inline">\(\sigma_X\)</span> with the sample correlation <span class="math inline">\(r\)</span> and the sample standard deviation <span class="math inline">\(s_X\)</span>, <span id="eq-posc-sample"><span class="math display">\[
+\hat\theta(\Delta) = \Phi\!\left(\frac{r\,\Delta}{s_X\sqrt{2(1 - r^2)}}\right).
+\tag{11}\]</span></span> Because <a href="#eq-posc-normal" class="quarto-xref">Equation&nbsp;9</a> is monotone in <span class="math inline">\(\rho\)</span> at every fixed <span class="math inline">\(\Delta\)</span>, a confidence interval for <span class="math inline">\(\rho\)</span> maps directly onto a confidence band for the curve. The package uses the Fisher transformation <span class="citation" data-cites="fisher1921">(<a href="#ref-fisher1921" role="doc-biblioref">Fisher 1921</a>)</span>, <span class="math inline">\(z = \operatorname{artanh}(r)\)</span>, which has an approximate standard error of <span class="math inline">\(1/\sqrt{n - 3}\)</span>. A <span class="math inline">\(100(1 - \alpha)\)</span>% confidence interval for <span class="math inline">\(\rho\)</span> is <span id="eq-fisher"><span class="math display">\[
+\left[\rho_L, \rho_U\right] = \tanh\!\left(\operatorname{artanh}(r) \pm z_{1 - \alpha/2}\,\frac{1}{\sqrt{n - 3}}\right),
+\tag{12}\]</span></span> and substituting <span class="math inline">\(\rho_L\)</span> and <span class="math inline">\(\rho_U\)</span> for <span class="math inline">\(r\)</span> in <a href="#eq-posc-sample" class="quarto-xref">Equation&nbsp;11</a> gives the lower and upper limits of the band at each <span class="math inline">\(\Delta\)</span> (for negative <span class="math inline">\(\Delta\)</span> the limits are exchanged, consistent with <a href="#eq-symmetry" class="quarto-xref">Equation&nbsp;6</a>). The band is pointwise, which means that it has the stated coverage at any single difference. This is the appropriate guarantee for a decision about one pair of people.</p>
+</section>
+</section>
+<section id="sec-multi" class="level3" data-number="2.3">
+<h3 data-number="2.3" class="anchored" data-anchor-id="sec-multi"><span class="header-section-number">2.3</span> Composites of several predictors</h3>
+<p>Clinical prognosis rarely depends on a single predictor. When several predictors are combined using the regression weights that best predict the outcome, the composite correlates with the outcome at the multiple correlation <span class="math inline">\(R\)</span>. Let <span class="math inline">\(\mathbf{R}_{xx}\)</span> be the correlation matrix of the predictors and <span class="math inline">\(\mathbf{r}_{xy}\)</span> the vector of correlations between the predictors and the outcome. Then <span id="eq-multiple-r"><span class="math display">\[
+R^2 = \mathbf{r}_{xy}^\top\,\mathbf{R}_{xx}^{-1}\,\mathbf{r}_{xy}.
+\tag{13}\]</span></span> Under multivariate normality the composite and the outcome are bivariate normal, so the POSC for a difference of <span class="math inline">\(\Delta\)</span> standard deviations on the composite is <a href="#eq-posc-normal" class="quarto-xref">Equation&nbsp;9</a> with <span class="math inline">\(\rho\)</span> replaced by <span class="math inline">\(R\)</span> and <span class="math inline">\(\sigma_X = 1\)</span>. A sample multiple correlation is biased upward because the weights are estimated from the same sample. The usual correction replaces <span class="math inline">\(R^2\)</span> with the adjusted value <span class="math inline">\(1 - (1 - R^2)(n - 1)/(n - k - 1)\)</span> for <span class="math inline">\(k\)</span> predictors <span class="citation" data-cites="cohen2003">(<a href="#ref-cohen2003" role="doc-biblioref">Cohen et al. 2003</a>)</span>, and the package uses the square root of the adjusted value by default. The sampling distribution of <span class="math inline">\(R\)</span> is skewed and its variance depends on <span class="math inline">\(k\)</span>, so the Fisher band is only approximate in this case. The package applies <a href="#eq-fisher" class="quarto-xref">Equation&nbsp;12</a> with a standard error of <span class="math inline">\(1/\sqrt{n - k - 2}\)</span> and truncates the interval at zero, and the resulting band should be treated as approximate. <a href="#fig-composite" class="quarto-xref">Figure&nbsp;3</a> illustrates both points using the correlation matrix of <a href="#sec-illustrations" class="quarto-xref">Section&nbsp;5</a>.</p>
+<div id="cell-fig-composite" class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-composite" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-composite-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="index_files/figure-html/fig-composite-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-3" title="Figure&nbsp;3: POSCs for a composite of several predictors. Left: curves for three single prognostic measures and for their optimally weighted composite, from the illustrative correlation matrix of Section&nbsp;5: baseline function (BF, correlation 0.51 with recovery), clinician rating (CR, 0.38), treatment adherence (AD, 0.31), and the composite (unadjusted multiple correlation 0.63). Right: the composite and the best single measure (BF) estimated from n = 100 patients, with 95% confidence bands (approximate for the composite). Labels sit on the curves."><img src="index_files/figure-html/fig-composite-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="3000"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-composite-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: POSCs for a composite of several predictors. Left: curves for three single prognostic measures and for their optimally weighted composite, from the illustrative correlation matrix of <a href="#sec-illustrations" class="quarto-xref">Section&nbsp;5</a>: baseline function (BF, correlation 0.51 with recovery), clinician rating (CR, 0.38), treatment adherence (AD, 0.31), and the composite (unadjusted multiple correlation 0.63). Right: the composite and the best single measure (BF) estimated from <span class="math inline">\(n = 100\)</span> patients, with 95% confidence bands (approximate for the composite). Labels sit on the curves.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-lm" class="level3" data-number="2.4">
+<h3 data-number="2.4" class="anchored" data-anchor-id="sec-lm"><span class="header-section-number">2.4</span> Predictions of a linear model</h3>
+<p>The same reasoning applies to a fitted linear model. The fitted values <span class="math inline">\(\hat Y\)</span> of the model are a composite of its predictors, and their correlation with the observed outcome is the multiple correlation of the model. Treating <span class="math inline">\(\hat Y\)</span> as the predictor gives a POSC for two patients who differ by <span class="math inline">\(\Delta\)</span> in their <em>predicted</em> outcomes, that is, the probability that the patient with the higher predicted outcome has the higher observed outcome. In this case <span class="math inline">\(\Delta\)</span> is in the units of the outcome and <span class="math inline">\(\sigma_X\)</span> is the standard deviation of the fitted values. This version of the curve describes how reliably the model orders two cases.</p>
+</section>
+</section>
+<section id="sec-empirical" class="level2" data-number="3">
+<h2 data-number="3" class="anchored" data-anchor-id="sec-empirical"><span class="header-section-number">3</span> Empirical POSCs</h2>
+<section id="motivation" class="level3" data-number="3.1">
+<h3 data-number="3.1" class="anchored" data-anchor-id="motivation"><span class="header-section-number">3.1</span> Motivation</h3>
+<p><a href="#eq-posc-normal" class="quarto-xref">Equation&nbsp;9</a> depends on the assumption of bivariate normality, and the assumption matters in practice. If the outcome is skewed, or the relationship is monotone but not linear, the Pearson correlation understates the rank association and the normal-theory curve is too low. If the relationship has a ceiling, the normal-theory curve continues to increase when the true curve becomes flat. If the relationship is nonmonotone, a correlation cannot describe it at all. A POSC is defined for any joint distribution, so the natural solution is to estimate the curve directly from the data.</p>
+</section>
+<section id="pairwise-construction-and-model" class="level3" data-number="3.2">
+<h3 data-number="3.2" class="anchored" data-anchor-id="pairwise-construction-and-model"><span class="header-section-number">3.2</span> Pairwise construction and model</h3>
+<p>Every pair of people in a sample is a realization of the definition in <a href="#eq-posc" class="quarto-xref">Equation&nbsp;5</a>. For people <span class="math inline">\(i\)</span> and <span class="math inline">\(j\)</span> with <span class="math inline">\(x_i \neq x_j\)</span>, we record the difference in the predictor <span class="math inline">\(\Delta_{ij} = x_i - x_j\)</span> and an indicator of whether the person with the higher predictor score also has the higher outcome, <span id="eq-concordance"><span class="math display">\[
+c_{ij} = \mathbf{1}\!\left[(x_i - x_j)(y_i - y_j) &gt; 0\right] + \tfrac{1}{2}\,\mathbf{1}\!\left[y_i = y_j\right],
+\tag{14}\]</span></span> where ties on the outcome count as one half. A sample of <span class="math inline">\(n\)</span> people gives <span class="math inline">\(n(n-1)/2\)</span> pairs, and the mean of <span class="math inline">\(c_{ij}\)</span> over all pairs is the sample estimate of <span class="math inline">\(\theta_b\)</span> in <a href="#eq-pbs" class="quarto-xref">Equation&nbsp;3</a>. The POSC is the regression of <span class="math inline">\(c_{ij}\)</span> on <span class="math inline">\(|\Delta_{ij}|\)</span>, that is, the proportion of concordant pairs among pairs that differ by a given amount on the predictor.</p>
+<p>The regression must satisfy <a href="#eq-symmetry" class="quarto-xref">Equation&nbsp;6</a>, and the simplest way to ensure this is to build the symmetry into the model. The logit of the curve is modeled as an odd function of the difference, <span id="eq-spline"><span class="math display">\[
+\operatorname{logit}\,\theta(\Delta) = \operatorname{sign}(\Delta)\, g(|\Delta|), \qquad g(d) = \sum_{k=1}^{K} \beta_k B_k(d),
+\tag{15}\]</span></span> where the <span class="math inline">\(B_k\)</span> are the basis functions of a natural cubic spline in <span class="math inline">\(d = |\Delta|\)</span> with no intercept term <span class="citation" data-cites="hastie2009">(<a href="#ref-hastie2009" role="doc-biblioref">Hastie et al. 2009</a>)</span>. The basis is constructed so that every <span class="math inline">\(B_k(0) = 0\)</span>, which forces <span class="math inline">\(\theta(0) = 1/2\)</span>, and the factor <span class="math inline">\(\operatorname{sign}(\Delta)\)</span> provides the symmetry. Because a natural spline has zero curvature at its boundary, the two halves of the curve join smoothly at <span class="math inline">\(\Delta = 0\)</span>. The spline is a flexible parametric smoother in the sense that it has a finite number of coefficients. The curve is empirical in the sense that no assumption is made about the joint distribution of <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>. The number of degrees of freedom <span class="math inline">\(K\)</span> controls the flexibility of the curve, with interior knots placed at quantiles of the observed differences. The default is <span class="math inline">\(K = 3\)</span>, and <span class="math inline">\(K = 1\)</span> gives a curve that is linear on the logit scale. The curve is not constrained to be monotone, for reasons given in <a href="#sec-nonmonotone" class="quarto-xref">Section&nbsp;3.4</a>. The coefficients <span class="math inline">\(\beta_k\)</span> are estimated by maximizing the binomial likelihood of the concordance indicators, which is ordinary logistic regression. The responses are shrunk by a negligible amount toward one half so that a solution exists even when large differences order the outcome perfectly. For large samples a random subset of pairs is used.</p>
+</section>
+<section id="confidence-bands-and-binned-checks" class="level3" data-number="3.3">
+<h3 data-number="3.3" class="anchored" data-anchor-id="confidence-bands-and-binned-checks"><span class="header-section-number">3.3</span> Confidence bands and binned checks</h3>
+<p>The pairs are not independent, because every person appears in <span class="math inline">\(n - 1\)</span> of them. Standard errors from the logistic regression treat the pairs as independent and are therefore much too small. The package instead uses a nonparametric bootstrap that resamples people <span class="citation" data-cites="efron1979 efron1993">(<a href="#ref-efron1979" role="doc-biblioref">Efron 1979</a>; <a href="#ref-efron1993" role="doc-biblioref">Efron and Tibshirani 1993</a>)</span>. In each resample, <span class="math inline">\(n\)</span> people are sampled with replacement, the pairs are rebuilt (omitting pairs of a person with their own duplicate, which carry no information), <a href="#eq-spline" class="quarto-xref">Equation&nbsp;15</a> is refitted with the knots held fixed, and the procedure is repeated. The pointwise band at each <span class="math inline">\(\Delta\)</span> is formed from the percentiles of the bootstrap curves. One thousand resamples give a stable 95% band.</p>
+<p>The fitted curve can also be compared with the observed proportions. The pairs are grouped into bins of <span class="math inline">\(|\Delta|\)</span>, the proportion of concordant pairs is computed in each bin, and the proportions are plotted as points on the curve. Because these points are interpreted as a set, they are given simultaneous rather than pointwise intervals. The same bootstrap provides the joint sampling distribution of the bin proportions, and a sup-<span class="math inline">\(t\)</span> critical value <span class="citation" data-cites="montielolea2019">(<a href="#ref-montielolea2019" role="doc-biblioref">Montiel Olea and Plagborg-Møller 2019</a>)</span> on the empirical logit scale gives intervals that cover all of the true proportions with the stated probability and that are asymmetric when a proportion is near 0 or 1. If the curve passes through these intervals, the spline is flexible enough. <a href="#fig-pairs" class="quarto-xref">Figure&nbsp;4</a> illustrates the construction with simulated data and a skewed outcome.</p>
+<div id="cell-fig-pairs" class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-pairs" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pairs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="index_files/figure-html/fig-pairs-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-4" title="Figure&nbsp;4: Construction of an empirical POSC. Left: 150 simulated observations with a skewed outcome (y = \exp(0.8x + \epsilon)); three of the 11,175 pairs are drawn as segments, blue if concordant (the observation higher on x is also higher on y) and red if discordant. Right: the empirical POSC (solid line) with its 95% bootstrap band, the observed proportion of concordant pairs in eight bins of |\Delta| with 95% simultaneous intervals (points and whiskers), and the normal-theory curve for the same Pearson correlation (dashed)."><img src="index_files/figure-html/fig-pairs-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="3000"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pairs-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4: Construction of an empirical POSC. Left: 150 simulated observations with a skewed outcome (<span class="math inline">\(y = \exp(0.8x + \epsilon)\)</span>); three of the 11,175 pairs are drawn as segments, blue if concordant (the observation higher on <span class="math inline">\(x\)</span> is also higher on <span class="math inline">\(y\)</span>) and red if discordant. Right: the empirical POSC (solid line) with its 95% bootstrap band, the observed proportion of concordant pairs in eight bins of <span class="math inline">\(|\Delta|\)</span> with 95% simultaneous intervals (points and whiskers), and the normal-theory curve for the same Pearson correlation (dashed).
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="sec-nonmonotone" class="level3" data-number="3.4">
+<h3 data-number="3.4" class="anchored" data-anchor-id="sec-nonmonotone"><span class="header-section-number">3.4</span> Nonmonotone relationships</h3>
+<p>A POSC describes pairs, and it averages over the location of the pair in the distribution of the predictor. Consider an inverted-U relationship, <span class="math inline">\(Y = -(X - c)^2\)</span>, such as the benefit of a drug that is greatest at an optimal dose <span class="math inline">\(c\)</span>, ineffective below it and toxic above it. For two patients who differ by <span class="math inline">\(\Delta\)</span>, the one with the higher value of <span class="math inline">\(X\)</span> has the higher outcome exactly when their midpoint is below the optimum. If <span class="math inline">\(X\)</span> is normal with mean zero, the midpoint is independent of the difference, and the POSC is constant at <span class="math inline">\(\Phi(c\sqrt{2})\)</span> for every <span class="math inline">\(\Delta &gt; 0\)</span>. When the optimum is at the mean of the predictor (<span class="math inline">\(c = 0\)</span>), the POSC equals 0.5 everywhere, even though the predictor determines the outcome exactly. A higher value of <span class="math inline">\(X\)</span> is beneficial for pairs below the optimum and harmful for pairs above it, and the two cases cancel in the population. When the optimum is half a standard deviation above the mean, the curve increases immediately to about 76% and remains there, so a larger difference on the predictor gives no further increase in the probability. The empirical POSC recovers curves of this kind, whereas the normal-theory curve, which depends only on the linear correlation, does not, and this is why the empirical method does not impose monotonicity. <a href="#fig-invu" class="quarto-xref">Figure&nbsp;5</a> shows the two curves for simulated data in which clinical benefit is an inverted-U function of dose, with the optimum half a standard deviation above the mean dose, plus random error. A more flexible spline (<code>df = 4</code>) is used so that the curve can become flat.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output cell-output-stdout">
+<pre><code>  delta      p  lower  upper
+1   0.5 0.7260 0.6671 0.7737
+2   1.0 0.8041 0.7379 0.8519
+3   2.0 0.8572 0.7717 0.9215</code></pre>
+</div>
+</div>
+<p>The Pearson correlation is 0.67, so the normal-theory curve increases steadily toward 1. The empirical curve increases rapidly over small differences, where the random error dominates, and then becomes flat near the theoretical value of 0.76. Beyond a moderate difference, a higher dose does not increase the probability of greater benefit, because for pairs above the optimum the higher dose is harmful. Neither a correlation nor the normal-theory curve can describe this relationship. The empirical POSC, together with its binned proportions, incorporates the shape of the relationship into the effect size.</p>
+<div id="cell-fig-invu" class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-invu" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-invu-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="index_files/figure-html/fig-invu-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-5" title="Figure&nbsp;5: An inverted-U dose-response relationship. Left: simulated clinical benefit as an inverted-U function of dose with its optimum 0.5 standard deviations above the mean dose (n = 300). Right: the empirical POSC (solid line) with its 95% bootstrap band and binned proportions, and the normal-theory curve for the same Pearson correlation (dashed); the normal-theory curve rises toward 1 while the empirical curve plateaus near \Phi(0.5\sqrt{2}) = 0.76."><img src="index_files/figure-html/fig-invu-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="3000"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-invu-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;5: An inverted-U dose-response relationship. Left: simulated clinical benefit as an inverted-U function of dose with its optimum 0.5 standard deviations above the mean dose (<span class="math inline">\(n = 300\)</span>). Right: the empirical POSC (solid line) with its 95% bootstrap band and binned proportions, and the normal-theory curve for the same Pearson correlation (dashed); the normal-theory curve rises toward 1 while the empirical curve plateaus near <span class="math inline">\(\Phi(0.5\sqrt{2}) = 0.76\)</span>.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-software" class="level2" data-number="4">
+<h2 data-number="4" class="anchored" data-anchor-id="sec-software"><span class="header-section-number">4</span> Software</h2>
+<section id="design" class="level3" data-number="4.1">
+<h3 data-number="4.1" class="anchored" data-anchor-id="design"><span class="header-section-number">4.1</span> Design</h3>
+<p>The <code>posc</code> package is written entirely in <code>R</code> and depends only on <code>ggplot2</code> <span class="citation" data-cites="ggplot2">(<a href="#ref-ggplot2" role="doc-biblioref">Wickham et al. 2025</a>)</span> in addition to the base and recommended packages. Four constructor functions, one for each type of curve, return an object of class <code>posc</code>:</p>
+<ul>
+<li><code>posc_uni(r, n, sd_x)</code> computes the normal-theory curve of <a href="#eq-posc-sample" class="quarto-xref">Equation&nbsp;11</a> from a correlation, a sample size and the standard deviation of the predictor (<a href="#sec-normal" class="quarto-xref">Section&nbsp;2.2</a>).</li>
+<li><code>posc_multi(r_mat, n, outcome)</code> computes the curve for the optimally weighted composite implied by a correlation matrix (<a href="#sec-multi" class="quarto-xref">Section&nbsp;2.3</a>).</li>
+<li><code>posc_lm(model)</code> computes the curve for the fitted values of a model estimated with <code>lm()</code> (<a href="#sec-lm" class="quarto-xref">Section&nbsp;2.4</a>).</li>
+<li><code>posc_emp(x, y)</code> estimates the empirical curve of <a href="#sec-empirical" class="quarto-xref">Section&nbsp;3</a> from raw data, with its bootstrap band and binned proportions.</li>
+</ul>
+<p>A <code>posc</code> object is a list. Its main components are <code>curve</code>, a data frame containing the curve and its confidence limits on a symmetric grid of differences, and the quantities <code>r</code>, <code>n</code>, <code>level</code> and <code>sd_x</code> from which the curve was computed. The component <code>details</code> holds information specific to the type of curve (for an empirical curve, the spline knots and coefficients, the number of pairs and bootstrap resamples, and the binned proportions), and a prediction function evaluates the curve, with its confidence interval at any level, at arbitrary differences. The constructors differ only in how they build the prediction function, so the methods for the class are shared:</p>
+<ul>
+<li><code>print()</code> describes the curve and reports the probability at a few differences.</li>
+<li><code>summary(object, delta)</code> and <code>predict(object, delta, level)</code> return the probability and its confidence limits at any differences as a data frame.</li>
+<li><code>as.data.frame()</code> returns the whole curve.</li>
+<li><code>plot()</code> and <code>autoplot()</code> draw it.</li>
+</ul>
+<p>The plot methods return <code>ggplot2</code> objects, so anything not covered by their arguments, such as the wording of an axis label, can be changed in the usual way, for example with <code>labs()</code>. The methods take arguments for the common variations. Setting <code>full = TRUE</code> draws the full curve over negative and positive differences instead of the default half. Setting <code>mark = delta</code> marks and labels selected differences on the curve, and <code>mark_ci = TRUE</code> adds their confidence intervals. Setting <code>percent = TRUE</code> labels the probability axis in percentages. For empirical curves, <code>bins = TRUE</code> adds the binned proportions with their simultaneous intervals, and <code>reference = TRUE</code> adds the normal-theory curve for the same Pearson correlation. Two further functions operate on several curves. <code>posc_comp()</code> overlays any number of curves and tests whether their correlations differ (a Fisher <span class="math inline">\(z\)</span> test for two curves and a homogeneity test for more than two), returning an object of class <code>"posc_comparison"</code> with its own print and plot methods. <code>posc_bins()</code> returns the binned proportions of an empirical curve with their simultaneous intervals as a data frame. <a href="#fig-plots" class="quarto-xref">Figure&nbsp;6</a> shows the main variations of the plot method for one curve.</p>
+<div id="cell-fig-plots" class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-plots" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-plots-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="index_files/figure-html/fig-plots-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-6" title="Figure&nbsp;6: The plot method for a curve from posc_uni(r = 0.5, n = 100, sd_x = 15). Top left: the default, the curve over positive differences with its 95% confidence band. Top right: full = TRUE, the full sigmoid. Bottom left: mark = c(10, 20), mark_ci = TRUE and percent = TRUE, which label chosen differences with their probabilities and confidence intervals on a percentage axis. Bottom right: a comparison of two curves from posc_comp(), labelled along the curves."><img src="index_files/figure-html/fig-plots-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="3000"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-plots-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;6: The plot method for a curve from <code>posc_uni(r = 0.5, n = 100, sd_x = 15)</code>. Top left: the default, the curve over positive differences with its 95% confidence band. Top right: <code>full = TRUE</code>, the full sigmoid. Bottom left: <code>mark = c(10, 20)</code>, <code>mark_ci = TRUE</code> and <code>percent = TRUE</code>, which label chosen differences with their probabilities and confidence intervals on a percentage axis. Bottom right: a comparison of two curves from <code>posc_comp()</code>, labelled along the curves.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="basic-use" class="level3" data-number="4.2">
+<h3 data-number="4.2" class="anchored" data-anchor-id="basic-use"><span class="header-section-number">4.2</span> Basic use</h3>
+<p>The package is loaded in the usual way, and a curve is created with one of the constructors. The printed object reports the method, the correlation with its confidence interval, and the probability at differences of 0.5, 1 and 2 standard deviations of the predictor.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output cell-output-stdout">
+<pre><code>Probability of Outcome Superiority Curve
+  Method:    bivariate normal
+  Predictor: X    Outcome: Y
+  r = 0.500, 95% CI [0.337, 0.634], n = 100
+
+  P(higher Y | X higher by delta):
+ delta     p lower upper
+ 0.500 0.581 0.550 0.614
+ 1.000 0.658 0.600 0.719
+ 2.000 0.793 0.693 0.877</code></pre>
+</div>
+</div>
+<p>The probability at any difference, with its confidence interval, is obtained with <code>predict()</code>, and the full curve with <code>as.data.frame()</code>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output cell-output-stdout">
+<pre><code>  delta      p  lower  upper
+1   0.5 0.5809 0.5503 0.6141
+2   1.0 0.6585 0.5998 0.7190
+3   2.0 0.7929 0.6934 0.8769</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  delta      p  lower  upper
+1 0.000 0.5000 0.5000 0.5000
+2 0.015 0.5024 0.5015 0.5035
+3 0.030 0.5049 0.5030 0.5069</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-illustrations" class="level2" data-number="5">
+<h2 data-number="5" class="anchored" data-anchor-id="sec-illustrations"><span class="header-section-number">5</span> Illustrations</h2>
+<section id="prioritizing-patients-with-a-prognostic-score" class="level3" data-number="5.1">
+<h3 data-number="5.1" class="anchored" data-anchor-id="prioritizing-patients-with-a-prognostic-score"><span class="header-section-number">5.1</span> Prioritizing patients with a prognostic score</h3>
+<p>A rehabilitation program has one place available and two eligible patients. At intake, patients complete a prognostic score (0 to 100, with higher values indicating a better prognosis) that is used to predict functional recovery at six months. Patient A scores 34 and patient B scores 22. A validation study of <span class="math inline">\(n = 100\)</span> earlier patients found a correlation of <span class="math inline">\(r = 0.52\)</span> between the score and recovery, and the standard deviation of the score among referred patients is 10. The two patients differ by <span class="math inline">\(\Delta = 12\)</span> points, so by <a href="#eq-posc-sample" class="quarto-xref">Equation&nbsp;11</a>, <span class="math display">\[
+\hat\theta(12) = \Phi\!\left(\frac{0.52 \times 12}{10\sqrt{2(1 - 0.52^2)}}\right) = \Phi(0.517) = 0.697.
+\]</span> Patient A therefore has approximately a 70% probability of recovering better than patient B. In the package, the predictor and outcome can be named so that the output and plots are labeled:</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output cell-output-stdout">
+<pre><code>  delta      p  lower upper
+1    12 0.6973 0.6285 0.766</code></pre>
+</div>
+</div>
+<p>The 95% confidence interval extends from 0.628 to 0.766, so the data support a modest advantage for patient A. <a href="#fig-selection" class="quarto-xref">Figure&nbsp;7</a> shows the full curve with the two patients marked, and <a href="#tbl-selection" class="quarto-xref">Table&nbsp;1</a>, produced with <code>summary()</code>, gives the probabilities at other differences. A 30-point difference, three standard deviations, would increase the probability to 0.90. By <a href="#eq-inverse" class="quarto-xref">Equation&nbsp;10</a>, a difference of 15.7 points is required before the higher scorer has a 75% probability of being the patient who recovers better.</p>
+<div id="cell-fig-selection" class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-selection" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="index_files/figure-html/fig-selection-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-7" title="Figure&nbsp;7: POSC for a prognostic score with r = 0.52, n = 100 and s_X = 10. The shaded region is the 95% confidence band. The marked point is the 12-point difference between the two patients, with its probability and confidence interval."><img src="index_files/figure-html/fig-selection-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:75.0%"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;7: POSC for a prognostic score with <span class="math inline">\(r = 0.52\)</span>, <span class="math inline">\(n = 100\)</span> and <span class="math inline">\(s_X = 10\)</span>. The shaded region is the 95% confidence band. The marked point is the 12-point difference between the two patients, with its probability and confidence interval.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div class="cell-output cell-output-stdout">
+<pre><code>  delta      p  lower  upper
+1     5 0.5852 0.5543 0.6188
+2    10 0.6666 0.6076 0.7274
+3    12 0.6973 0.6285 0.7660
+4    20 0.8054 0.7076 0.8868
+5    30 0.9017 0.7938 0.9652</code></pre>
+</div>
+</div>
+<div class="cell" data-layout-align="center">
+<div id="tbl-selection" class="cell quarto-float quarto-figure quarto-figure-center anchored" data-layout-align="center">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: Probability that the patient with the higher prognostic score recovers better, at several differences in the score.
+</figcaption>
+<div aria-describedby="tbl-selection-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<div class="cell-output-display">
+<table class="cell caption-top table table-sm table-striped small">
+<thead>
+<tr class="header">
+<th style="text-align: center;" data-quarto-table-cell-role="th">Difference in prognostic score</th>
+<th style="text-align: center;" data-quarto-table-cell-role="th">Probability</th>
+<th style="text-align: center;" data-quarto-table-cell-role="th">95% CI</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">5</td>
+<td style="text-align: center;">0.585</td>
+<td style="text-align: center;">[0.554, 0.619]</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">10</td>
+<td style="text-align: center;">0.667</td>
+<td style="text-align: center;">[0.608, 0.727]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">12</td>
+<td style="text-align: center;">0.697</td>
+<td style="text-align: center;">[0.628, 0.766]</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">20</td>
+<td style="text-align: center;">0.805</td>
+<td style="text-align: center;">[0.708, 0.887]</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">30</td>
+<td style="text-align: center;">0.902</td>
+<td style="text-align: center;">[0.794, 0.965]</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</figure>
+</div>
+</div>
+</section>
+<section id="comparing-prognostic-measures" class="level3" data-number="5.2">
+<h3 data-number="5.2" class="anchored" data-anchor-id="comparing-prognostic-measures"><span class="header-section-number">5.2</span> Comparing prognostic measures</h3>
+<p>Suppose that three measures taken at intake could be used to predict recovery, and that in validation data their correlations with recovery are 0.51 for a baseline functional assessment (BF), 0.38 for a clinician’s global rating (CR) and 0.26 for a patient self-rating (PSR). These values are illustrative. <code>posc_comp()</code> accepts any number of curves, named or unnamed, and overlays them, and <a href="#fig-methods" class="quarto-xref">Figure&nbsp;8</a> (left) shows the curves for the three correlations. The difference between the functional assessment and the clinician’s rating appears modest as a difference in correlations, but it means that two patients one standard deviation apart are ordered correctly 66% of the time by the assessment and 61% of the time by the rating.</p>
+<p>When sample sizes are supplied, <code>posc_comp()</code> also tests whether the correlations differ. For two curves from independent validation samples of 100 and 120 patients:</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output cell-output-stdout">
+<pre><code>Comparison of 2 probability of outcome superiority curves
+
+ curve  method r     n  
+ POSC 1 normal 0.510 100
+ POSC 2 normal 0.380 120
+
+Test of equal correlations (independent samples):
+  z = 1.18, p = 0.236</code></pre>
+</div>
+</div>
+</section>
+<section id="composites-and-linear-models" class="level3" data-number="5.3">
+<h3 data-number="5.3" class="anchored" data-anchor-id="composites-and-linear-models"><span class="header-section-number">5.3</span> Composites and linear models</h3>
+<p><code>posc_multi()</code> accepts a correlation matrix of the predictors and the outcome. With an illustrative matrix in which baseline function, the clinician’s rating and treatment adherence correlate 0.51, 0.38 and 0.31 with recovery and are modestly intercorrelated, the optimally weighted composite has a multiple correlation well above that of any single predictor:</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output cell-output-stdout">
+<pre><code>Probability of Outcome Superiority Curve
+  Method:    bivariate normal, optimally weighted composite
+  Predictor: predictor    Outcome: recovery
+  r = 0.629, 95% CI [0.572, 0.679], n = 500
+  (r adjusted for the number of predictors; unadjusted r = 0.632)
+
+  P(higher recovery | predictor higher by delta):
+ delta     p lower upper
+ 0.500 0.612 0.597 0.628
+ 1.000 0.716 0.689 0.743
+ 2.000 0.874 0.838 0.905</code></pre>
+</div>
+</div>
+<p>The printed correlation is the adjusted multiple correlation of <a href="#sec-multi" class="quarto-xref">Section&nbsp;2.3</a>, and the unadjusted value, 0.632, is reported with it. <a href="#fig-composite" class="quarto-xref">Figure&nbsp;3</a> compares the curve for the composite with the curves for the single predictors. <code>posc_lm()</code> uses a fitted model instead of a correlation matrix. For a simulated data set of 200 patients in which recovery depends on baseline function and adherence:</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output cell-output-stdout">
+<pre><code>  delta      p  lower  upper
+1   0.5 0.6443 0.6207 0.6700
+2   1.0 0.7704 0.7307 0.8106
+3   2.0 0.9306 0.8906 0.9608</code></pre>
+</div>
+</div>
+<p>Here the differences are in units of predicted recovery, and the curve (<a href="#fig-methods" class="quarto-xref">Figure&nbsp;8</a>, right) gives the probability that the patient with the higher predicted recovery has the higher observed recovery.</p>
+<div id="cell-fig-methods" class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-methods" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-methods-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="index_files/figure-html/fig-methods-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-8" title="Figure&nbsp;8: POSCs for three prognostic measures and for a linear model. Left: normal-theory curves for three prognostic measures with illustrative correlations with recovery: a baseline functional assessment (BF, 0.51), a clinician’s global rating (CR, 0.38) and a patient self-rating (PSR, 0.26). Right: the curve for the fitted values of a linear model with two predictors fitted to 200 simulated patients, with its 95% confidence band; the difference on the horizontal axis is in units of predicted recovery."><img src="index_files/figure-html/fig-methods-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="3000"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-methods-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8: POSCs for three prognostic measures and for a linear model. Left: normal-theory curves for three prognostic measures with illustrative correlations with recovery: a baseline functional assessment (BF, 0.51), a clinician’s global rating (CR, 0.38) and a patient self-rating (PSR, 0.26). Right: the curve for the fitted values of a linear model with two predictors fitted to 200 simulated patients, with its 95% confidence band; the difference on the horizontal axis is in units of predicted recovery.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="an-empirical-posc-performance-status-and-survival" class="level3" data-number="5.4">
+<h3 data-number="5.4" class="anchored" data-anchor-id="an-empirical-posc-performance-status-and-survival"><span class="header-section-number">5.4</span> An empirical POSC: performance status and survival</h3>
+<p>The <code>VA</code> data set in the <code>MASS</code> package <span class="citation" data-cites="venables2002">(<a href="#ref-venables2002" role="doc-biblioref">Venables and Ripley 2002</a>)</span> comes from a Veterans Administration trial of treatments for advanced lung cancer. The Karnofsky performance status of each patient at entry, a clinician’s rating of functional ability from 0 to 100, is a widely used prognostic score, and survival time in days is strongly skewed, so the relationship between the two variables is monotone but far from bivariate normal. The patients who died during follow-up are used here, with survival time treated as a continuous outcome, and the few censored patients are omitted for the purpose of the illustration. <code>posc_emp()</code> takes the two variables, fits the spline model of <a href="#eq-spline" class="quarto-xref">Equation&nbsp;15</a>, runs the bootstrap (1000 resamples by default) and computes the binned proportions (eight bins here). The printed output reports the Pearson correlation for reference, the degrees of freedom of the spline, and the numbers of pairs and resamples.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output cell-output-stdout">
+<pre><code>Probability of Outcome Superiority Curve
+  Method:    empirical (spline logistic, bootstrap CI)
+  Predictor: Karnofsky score    Outcome: survival time
+  r = 0.409 (Pearson), n = 128
+  Spline df = 3, pairs used = 7051, bootstrap resamples = 1000
+
+  P(higher survival time | Karnofsky score higher by delta):
+  delta     p lower upper
+  9.950 0.593 0.551 0.641
+ 19.900 0.692 0.638 0.751
+ 39.801 0.869 0.797 0.933</code></pre>
+</div>
+</div>
+<p>The Pearson correlation is 0.41, whereas the Spearman correlation is 0.60, and the difference between them corresponds to the difference between the empirical and normal-theory curves in <a href="#fig-empirical" class="quarto-xref">Figure&nbsp;9</a>. For two patients whose Karnofsky scores differ by 20 points (one standard deviation), the empirical curve gives a probability of 0.69 (95% CI [0.64, 0.75]) that the patient with the higher score survives longer, compared with 0.62 under normal theory. The binned proportions, returned by <code>posc_bins()</code>, follow the empirical curve closely and lie above the normal-theory curve over the whole range. Assuming normality here would substantially understate how reliably performance status orders survival. The figure combines the scatterplot and <code>autoplot(emp_va, bins = TRUE, reference = TRUE)</code>, with the vertical axis relabeled, using the <code>patchwork</code> package <span class="citation" data-cites="patchwork">(<a href="#ref-patchwork" role="doc-biblioref">Pedersen 2024</a>)</span>.</p>
+<div class="cell" data-layout-align="center">
+<div class="cell-output cell-output-stdout">
+<pre><code>  delta_low delta_high  delta n_pairs      p  lower  upper
+1         0         10  9.729    2104 0.5917 0.5252 0.6549
+2        10         20 19.757    1747 0.6940 0.5984 0.7753
+3        20         30 29.797    1279 0.7776 0.6523 0.8666
+4        30         40 39.771     940 0.8830 0.7409 0.9518
+5        40         55 49.883     642 0.9120 0.7055 0.9778</code></pre>
+</div>
+</div>
+<div id="cell-fig-empirical" class="cell" data-layout-align="center">
+<div class="cell-output-display">
+<div id="fig-empirical" class="quarto-float quarto-figure quarto-figure-center anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-empirical-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<a href="index_files/figure-html/fig-empirical-1.png" class="lightbox" data-gallery="quarto-lightbox-gallery-9" title="Figure&nbsp;9: An empirical POSC for performance status and survival. Left: Karnofsky performance status at entry and survival time for the patients in the Veterans Administration lung cancer trial who died during follow-up. Right: the empirical POSC (solid line) with its 95% bootstrap band, the observed proportion of concordant pairs in eight bins of the difference in Karnofsky score with 95% simultaneous intervals (points and whiskers), and the normal-theory curve for the same Pearson correlation (dashed)."><img src="index_files/figure-html/fig-empirical-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img" width="3000"></a>
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-empirical-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9: An empirical POSC for performance status and survival. Left: Karnofsky performance status at entry and survival time for the patients in the Veterans Administration lung cancer trial who died during follow-up. Right: the empirical POSC (solid line) with its 95% bootstrap band, the observed proportion of concordant pairs in eight bins of the difference in Karnofsky score with 95% simultaneous intervals (points and whiskers), and the normal-theory curve for the same Pearson correlation (dashed).
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="sec-summary" class="level2" data-number="6">
+<h2 data-number="6" class="anchored" data-anchor-id="sec-summary"><span class="header-section-number">6</span> Summary and discussion</h2>
+<p>The probability of outcome superiority curve converts a correlation into the quantity that a decision requires, namely the probability that the person with the higher predictor score has the higher outcome, at the observed difference in the predictor. The curve contains the existing common language effect size for correlations as its average (<a href="#eq-average" class="quarto-xref">Equation&nbsp;7</a>), it reduces to the probability of superiority for group differences at each level of the predictor (<a href="#eq-posc-normal" class="quarto-xref">Equation&nbsp;9</a>), and it can be estimated either from a correlation under bivariate normality or directly from data without a distributional assumption. The <code>posc</code> package provides both approaches through one class of object with a small set of methods, so that a curve computed from a published correlation and a curve estimated from raw data are handled, plotted and compared in the same way.</p>
+<p>The curve is closely related to a statistic that is already widely used in clinical research. The concordance index of <span class="citation" data-cites="harrell1982">Harrell et al. (<a href="#ref-harrell1982" role="doc-biblioref">1982</a>)</span> is the probability that, of two patients, the one with the higher predicted risk has the worse outcome. It is the standard summary of the discrimination of a prognostic model, and for a continuous outcome it is equal to <span class="math inline">\(\theta_b\)</span> in <a href="#eq-pbs" class="quarto-xref">Equation&nbsp;3</a> with the prediction of the model as the predictor. The POSC is the concordance index expressed as a function of the difference between the two patients on the predictor, and by <a href="#eq-average" class="quarto-xref">Equation&nbsp;7</a> the index is the average of the curve. A model with a concordance index of 0.7 may discriminate well between patients who are far apart on its score and poorly between patients who are close together, and the curve shows which is the case.</p>
+<p>Although the examples in this paper are clinical, the curve applies wherever a continuous predictor is used to choose between people. Personnel selection is the most direct application. A validity coefficient relating a test score to job performance can be expressed as the probability that, of two applicants whose scores differ by a given amount, the higher scorer will perform better, which is the question the person making the hiring decision faces. Other examples include educational admissions and placement, and any setting in which a risk or prognostic score is used to allocate a limited resource.</p>
+<p>Several limitations should be noted. The curve describes a pair of people sampled from the population in which it was estimated. If the patients to whom the curve is applied are a restricted range of that population (for example, patients referred to a specialist clinic), or if the predictor is measured with error, the correlation used in <a href="#eq-posc-sample" class="quarto-xref">Equation&nbsp;11</a> should be the one that applies to the decision at hand, corrected in the usual ways, because any bias in the correlation carries over to the curve. A curve evaluated at a difference of <span class="math inline">\(\Delta\)</span> describes which of two people is more likely to have the better outcome and says nothing about the outcome of either individual. A 70% probability of identifying the patient who will do better still implies an error rate of 30%. The normal-theory confidence band is accurate for a single predictor but only approximate for composites and linear models. The empirical curve requires the raw data and, because of the bootstrap, more computation than a formula. It should be preferred whenever the data are available and the relationship may be nonlinear, skewed or nonmonotone, and the binned proportions should be inspected to confirm that the spline is flexible enough. When only a correlation is available, which is the usual situation when a published study is being interpreted, the parametric curve is the only option, and its assumptions should be stated.</p>
+</section>
+<section id="sec-computational" class="level2" data-number="7">
+<h2 data-number="7" class="anchored" data-anchor-id="sec-computational"><span class="header-section-number">7</span> Computational details</h2>
+<p>The results in this paper were obtained using <code>R</code> 4.5.1 <span class="citation" data-cites="rcore">(<a href="#ref-rcore" role="doc-biblioref">R Core Team 2026</a>)</span> with the <code>posc</code> 0.2.0, <code>ggplot2</code> 4.0.3, <code>patchwork</code> 1.3.2, <code>geomtextpath</code> 0.2.0 <span class="citation" data-cites="geomtextpath">(<a href="#ref-geomtextpath" role="doc-biblioref">Cameron and Brand 2025</a>)</span> and <code>MASS</code> 7.3.65 packages. The three bootstrap fits take about two minutes in total. <code>R</code> itself and all packages used are available from CRAN at <a href="https://CRAN.R-project.org/" class="uri">https://CRAN.R-project.org/</a>, and the source of this paper, with a replication script, is available at <a href="https://github.com/MatthewBJane/posc" class="uri">https://github.com/MatthewBJane/posc</a>.</p>
+</section>
+<section id="acknowledgments" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="acknowledgments">Acknowledgments</h2>
+<p>The author wrote the original manuscript and the core of the <code>posc</code> package. Claude, a large language model developed by Anthropic, was then used under the author’s direction to revise the text and figures and to assist with extending and testing the code. The author specified the methods, reviewed and verified all code, analyses and results, and takes full responsibility for the content.</p>
+</section>
+<section id="references" class="level2 unnumbered">
+<h2 class="unnumbered anchored" data-anchor-id="references">References</h2>
+<div id="refs" class="references csl-bib-body hanging-indent" role="list">
+<div id="ref-benshachar2020" class="csl-entry" role="listitem">
+Ben-Shachar, Mattan S., Daniel Lüdecke, and Dominique Makowski. 2020. <span>“Effectsize: Estimation of Effect Size Indices and Standardized Parameters.”</span> <em>Journal of Open Source Software</em> 5 (56): 2815. <a href="https://doi.org/10.21105/joss.02815">https://doi.org/10.21105/joss.02815</a>.
+</div>
+<div id="ref-geomtextpath" class="csl-entry" role="listitem">
+Cameron, Allan, and Teun van den Brand. 2025. <em>Geomtextpath: Curved Text in Ggplot2</em>. <a href="https://CRAN.R-project.org/package=geomtextpath">https://CRAN.R-project.org/package=geomtextpath</a>.
+</div>
+<div id="ref-cohen1988" class="csl-entry" role="listitem">
+Cohen, Jacob. 1988. <em>Statistical Power Analysis for the Behavioral Sciences</em>. 2nd ed. Lawrence Erlbaum.
+</div>
+<div id="ref-cohen2003" class="csl-entry" role="listitem">
+Cohen, Jacob, Patricia Cohen, Stephen G. West, and Leona S. Aiken. 2003. <em>Applied Multiple Regression/Correlation Analysis for the Behavioral Sciences</em>. 3rd ed. Lawrence Erlbaum.
+</div>
+<div id="ref-dunlap1994" class="csl-entry" role="listitem">
+Dunlap, William P. 1994. <span>“Generalizing the Common Language Effect Size Indicator to Bivariate Normal Correlations.”</span> <em>Psychological Bulletin</em> 116 (3): 509–11. <a href="https://doi.org/10.1037/0033-2909.116.3.509">https://doi.org/10.1037/0033-2909.116.3.509</a>.
+</div>
+<div id="ref-efron1979" class="csl-entry" role="listitem">
+Efron, Bradley. 1979. <span>“Bootstrap Methods: Another Look at the Jackknife.”</span> <em>The Annals of Statistics</em> 7 (1): 1–26. <a href="https://doi.org/10.1214/aos/1176344552">https://doi.org/10.1214/aos/1176344552</a>.
+</div>
+<div id="ref-efron1993" class="csl-entry" role="listitem">
+Efron, Bradley, and Robert J. Tibshirani. 1993. <em>An Introduction to the Bootstrap</em>. Chapman &amp; Hall.
+</div>
+<div id="ref-fisher1921" class="csl-entry" role="listitem">
+Fisher, Ronald A. 1921. <span>“On the <span>‘Probable Error’</span> of a Coefficient of Correlation Deduced from a Small Sample.”</span> <em>Metron</em> 1: 3–32.
+</div>
+<div id="ref-grissom1994" class="csl-entry" role="listitem">
+Grissom, Robert J. 1994. <span>“Probability of the Superior Outcome of One Treatment over Another.”</span> <em>Journal of Applied Psychology</em> 79 (2): 314–16. <a href="https://doi.org/10.1037/0021-9010.79.2.314">https://doi.org/10.1037/0021-9010.79.2.314</a>.
+</div>
+<div id="ref-harrell1982" class="csl-entry" role="listitem">
+Harrell, Frank E., Robert M. Califf, David B. Pryor, Kerry L. Lee, and Robert A. Rosati. 1982. <span>“Evaluating the Yield of Medical Tests.”</span> <em>JAMA</em> 247 (18): 2543–46.
+</div>
+<div id="ref-hastie2009" class="csl-entry" role="listitem">
+Hastie, Trevor, Robert Tibshirani, and Jerome Friedman. 2009. <em>The Elements of Statistical Learning: Data Mining, Inference, and Prediction</em>. 2nd ed. Springer.
+</div>
+<div id="ref-posc" class="csl-entry" role="listitem">
+Jané, Matthew B. 2026. <em>Posc: Probability of Outcome Superiority Curves</em>. <a href="https://github.com/MatthewBJane/posc">https://github.com/MatthewBJane/posc</a>.
+</div>
+<div id="ref-kendall1938" class="csl-entry" role="listitem">
+Kendall, Maurice G. 1938. <span>“A New Measure of Rank Correlation.”</span> <em>Biometrika</em> 30 (1–2): 81–93. <a href="https://doi.org/10.1093/biomet/30.1-2.81">https://doi.org/10.1093/biomet/30.1-2.81</a>.
+</div>
+<div id="ref-li2019" class="csl-entry" role="listitem">
+Li, Johnson Ching-Hong, and Rory M. Waisman. 2019. <span>“Probability of Bivariate Superiority: A Non-Parametric Common-Language Statistic for Detecting Bivariate Relationships.”</span> <em>Behavior Research Methods</em> 51 (1): 258–79. <a href="https://doi.org/10.3758/s13428-018-1089-5">https://doi.org/10.3758/s13428-018-1089-5</a>.
+</div>
+<div id="ref-mcgraw1992" class="csl-entry" role="listitem">
+McGraw, Kenneth O., and S. P. Wong. 1992. <span>“A Common Language Effect Size Statistic.”</span> <em>Psychological Bulletin</em> 111 (2): 361–65. <a href="https://doi.org/10.1037/0033-2909.111.2.361">https://doi.org/10.1037/0033-2909.111.2.361</a>.
+</div>
+<div id="ref-montielolea2019" class="csl-entry" role="listitem">
+Montiel Olea, José Luis, and Mikkel Plagborg-Møller. 2019. <span>“Simultaneous Confidence Bands: Theory, Implementation, and an Application to <span>SVARs</span>.”</span> <em>Journal of Applied Econometrics</em> 34 (1): 1–17. <a href="https://doi.org/10.1002/jae.2656">https://doi.org/10.1002/jae.2656</a>.
+</div>
+<div id="ref-patchwork" class="csl-entry" role="listitem">
+Pedersen, Thomas Lin. 2024. <em>Patchwork: The Composer of Plots</em>. <a href="https://CRAN.R-project.org/package=patchwork">https://CRAN.R-project.org/package=patchwork</a>.
+</div>
+<div id="ref-rcore" class="csl-entry" role="listitem">
+R Core Team. 2026. <em>R: A Language and Environment for Statistical Computing</em>. R Foundation for Statistical Computing. <a href="https://www.R-project.org/">https://www.R-project.org/</a>.
+</div>
+<div id="ref-ruscio2008" class="csl-entry" role="listitem">
+Ruscio, John. 2008. <span>“A Probability-Based Measure of Effect Size: Robustness to Base Rates and Other Factors.”</span> <em>Psychological Methods</em> 13 (1): 19–30. <a href="https://doi.org/10.1037/1082-989X.13.1.19">https://doi.org/10.1037/1082-989X.13.1.19</a>.
+</div>
+<div id="ref-vargha2000" class="csl-entry" role="listitem">
+Vargha, András, and Harold D. Delaney. 2000. <span>“A Critique and Improvement of the <span>CL</span> Common Language Effect Size Statistics of <span>McGraw</span> and <span>Wong</span>.”</span> <em>Journal of Educational and Behavioral Statistics</em> 25 (2): 101–32. <a href="https://doi.org/10.3102/10769986025002101">https://doi.org/10.3102/10769986025002101</a>.
+</div>
+<div id="ref-venables2002" class="csl-entry" role="listitem">
+Venables, William N., and Brian D. Ripley. 2002. <em>Modern Applied Statistics with <span>S</span></em>. 4th ed. Springer.
+</div>
+<div id="ref-ggplot2" class="csl-entry" role="listitem">
+Wickham, Hadley, Winston Chang, Lionel Henry, et al. 2025. <em>Ggplot2: Create Elegant Data Visualisations Using the Grammar of Graphics</em>. <a href="https://CRAN.R-project.org/package=ggplot2">https://CRAN.R-project.org/package=ggplot2</a>.
+</div>
+</div>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+<script>var lightboxQuarto = GLightbox({"closeEffect":"zoom","descPosition":"bottom","loop":false,"openEffect":"zoom","selector":".lightbox"});
+(function() {
+  let previousOnload = window.onload;
+  window.onload = () => {
+    if (previousOnload) {
+      previousOnload();
+    }
+    lightboxQuarto.on('slide_before_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      const href = trigger.getAttribute('href');
+      if (href !== null) {
+        const imgEl = window.document.querySelector(`a[href="${href}"] img`);
+        if (imgEl !== null) {
+          const srcAttr = imgEl.getAttribute("src");
+          if (srcAttr && srcAttr.startsWith("data:")) {
+            slideConfig.href = srcAttr;
+          }
+        }
+      } 
+    });
+  
+    lightboxQuarto.on('slide_after_load', (data) => {
+      const { slideIndex, slideNode, slideConfig, player, trigger } = data;
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(slideNode);
+      }
+    });
+  
+  };
+  
+})();
+          </script>
+
+
+
+
+</body></html>

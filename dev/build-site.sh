@@ -14,6 +14,7 @@ cd "$(dirname "$0")/.."
 Rscript -e 'pkgdown::build_site(preview = FALSE)'
 ( cd paper && quarto render )
 mkdir -p docs/paper
-rsync -a --delete --exclude _tex paper/_manuscript/ docs/paper/
+rsync -a --delete --exclude _tex --exclude '*.ipynb' --exclude '*.qmd' \
+      --exclude index-preview.html paper/_manuscript/ docs/paper/
 touch docs/.nojekyll
 echo "Site built in docs/. Open docs/index.html to check it, then commit docs/."

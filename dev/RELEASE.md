@@ -29,6 +29,10 @@ open docs/index.html                         # look at home, Reference, Paper
 git add -A && git commit -m "Build website" && git push
 ```
 
+Also on GitHub: **Settings > General > Social preview > Edit**, upload
+`man/figures/social-preview.png` (1280 x 640). This is the card shown when
+the repository link is shared.
+
 On GitHub: repository **Settings > Pages > Build and deployment**: Source
 "Deploy from a branch", branch `main`, folder `/docs`, Save. After a minute
 check <https://matthewbjane.github.io/posc/> and the Paper menu (HTML and PDF).
