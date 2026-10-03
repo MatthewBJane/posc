@@ -1,7 +1,8 @@
 bibentry(
-  bibtype  = "Manual",
-  title    = "posc: Probability of Outcome Superiority Curves",
-  author   = "Matthew B. Jané",
-  year     = "2023",
-  note     = "R package"
+  bibtype = "Manual",
+  title = "{posc}: Probability of Outcome Superiority Curves",
+  author = person("Matthew B.", "Jané"),
+  year = "2026",
+  note = paste("R package version", meta$Version),
+  url = "https://github.com/MatthewBJane/posc"
 )

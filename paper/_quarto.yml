@@ -1,0 +1,21 @@
+project:
+  type: manuscript
+
+manuscript:
+  article: index.qmd
+  meca-bundle: false
+
+notebook-links: false
+
+format:
+  jss-pdf:
+    keep-tex: true
+    filters:
+      - jss-code.lua
+  jss-html: default
+
+execute:
+  warning: false
+  message: false
+  freeze: auto
+  fig-dpi: 300

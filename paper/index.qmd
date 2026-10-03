@@ -1,0 +1,662 @@
+---
+title: "[posc]{.pkg}: Probability of Outcome Superiority Curves in [R]{.proglang}"
+title-plain: "posc: Probability of Outcome Superiority Curves in R"
+short-title: "posc: Probability of Outcome Superiority Curves in R"
+author:
+  - name: Matthew B. Jané
+    affiliations:
+      - name: University of Connecticut
+        department: Department of Psychological Sciences
+        address: 406 Babbidge Road, Unit 1020
+        city: Storrs, CT 06269
+        country: United States
+    email: matthew.jane@uconn.edu
+    url: https://matthewbjane.com
+abstract: |
+  The relationship between a continuous predictor and a continuous outcome is conventionally summarized by a correlation coefficient, which is difficult to interpret in terms of the decisions it is meant to inform. Common language effect sizes express an effect as a probability. The existing common language effect size for correlations is the probability that a person who scores higher than another person on the predictor also scores higher on the outcome. This probability is a single number, but in practice it depends on how far apart the two people are on the predictor. This paper introduces the probability of outcome superiority curve (POSC), which gives the probability that the person with the higher predictor score has the higher outcome as a function of the difference between the two people on the predictor, and presents its implementation in the [R]{.proglang} package [posc]{.pkg}. The curve is derived under bivariate normality for a single predictor, for a composite of several predictors, and for the predictions of a linear model, with confidence bands based on the Fisher transformation. An empirical POSC is also developed that is estimated from raw data without a distributional assumption, using a symmetry-constrained spline model fitted to all pairs of observations with bootstrap confidence bands, and that recovers the shape of nonlinear and nonmonotone relationships that a correlation cannot describe. The existing common language effect size for correlations is shown to be the POSC averaged over the distribution of differences in the predictor. The package provides constructors for each type of curve, a common class with print, summary, plot and predict methods, and functions for comparing curves. Its use is illustrated with four clinical examples, namely prioritizing patients with a prognostic score, combining prognostic measures, the survival of lung cancer patients as a function of performance status, and a dose-response relationship with an optimum.
+keywords: [common language effect size, probability of superiority, correlation, prognosis, clinical prediction, bootstrap, R]
+keywords-formatted: [common language effect size, probability of superiority, correlation, prognosis, clinical prediction, bootstrap, "[R]{.proglang}"]
+bibliography: references.bib
+---
+
+```{r}
+#| label: setup
+#| include: false
+options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE,
+        digits = 4)
+knitr::opts_chunk$set(prompt = TRUE, comment = NA, fig.align = "center",
+                      dev = if (knitr::is_latex_output()) "cairo_pdf" else "png")
+library("posc")
+library("ggplot2")
+library("patchwork")
+library("geomtextpath")
+set.seed(2026)
+fmt <- function(x, d = 2) formatC(x, digits = d, format = "f")
+prob_theme <- function() {
+  list(scale_y_continuous(breaks = seq(0, 1, by = 0.1)),
+       theme_classic(base_size = 12),
+       theme(axis.line = element_line(colour = "grey25", linewidth = 0.5),
+             panel.grid.major = element_line(colour = "grey94",
+                                             linewidth = 0.35)))
+}
+label_paths <- function(cmp, hjust = NULL, labels = NULL, ci = TRUE,
+                        colors = NULL, parse = FALSE, size = 3.6,
+                        ylab = NULL) {
+  nm <- names(cmp$posc)
+  curves <- do.call(rbind, lapply(nm, function(m) {
+    d <- as.data.frame(cmp$posc[[m]], full = FALSE)
+    d$model <- m
+    d
+  }))
+  curves$model <- factor(curves$model, levels = nm)
+  lab <- if (is.null(labels)) nm else unname(labels[nm])
+  curves$label <- lab[as.integer(curves$model)]
+  if (is.null(hjust)) hjust <- seq(0.35, 0.8, length.out = length(nm))
+  curves$hjust <- hjust[as.integer(curves$model)]
+  if (is.null(colors)) {
+    colors <- c("#0072B2", "#D55E00", "#009E73", "#CC79A7", "#E69F00",
+                "#56B4E9", "#000000")[seq_along(nm)]
+  }
+  has_ci <- isTRUE(ci) && !all(is.na(curves$lower))
+  y_rng <- range(c(0.5, curves$p, if (has_ci) c(curves$lower, curves$upper)),
+                 na.rm = TRUE)
+  y_rng <- c(max(0, floor(y_rng[1] * 10) / 10), min(1, ceiling(y_rng[2] * 10) / 10))
+  first <- cmp$posc[[1]]$labels
+  g <- ggplot(curves, aes(delta, p, colour = model, group = model))
+  if (has_ci) {
+    g <- g + geom_ribbon(aes(ymin = lower, ymax = upper, fill = model),
+                         alpha = 0.18, colour = NA, na.rm = TRUE)
+  }
+  g +
+    geom_textpath(aes(label = label, hjust = hjust), linewidth = 1.1,
+                  size = size, parse = parse, text_smoothing = 30) +
+    scale_colour_manual(values = colors, guide = "none") +
+    scale_fill_manual(values = colors, guide = "none") +
+    coord_cartesian(ylim = y_rng) +
+    labs(x = paste0("Difference in ", first$predictor,
+                    if (isTRUE(first$sd_units)) " (SD units)" else ""),
+         y = if (is.null(ylab)) paste("Probability of higher", first$outcome)
+             else ylab) +
+    prob_theme()
+}
+```
+
+## Introduction
+
+A correlation coefficient is a summary statistic between $-1$ and $1$ that describes the magnitude and direction of the linear association between two variables. Commonly used benchmarks interpret correlations of 0.1 as small, 0.3 as medium and 0.5 as large [@cohen1988], but these labels say nothing about what the relationship means for a decision or a given application. Clinicians frequently have to choose between patients when a resource is limited. For instance, a rehabilitation program has one place available, a scarce treatment can be offered to only one of two patients, or a waiting list must be ordered by expected benefit. Suppose that a prognostic score correlates 0.50 with recovery after a treatment and that two patients differ on the score. The clinician making the choice needs to know the probability that the patient with the higher score will recover better, and whether that probability is large enough to justify giving that patient priority.
+
+Common language effect sizes address questions of this kind by expressing an effect as a probability. The original and most widely used version is the *probability of superiority* for two groups [@mcgraw1992; @grissom1994; @vargha2000], defined as the probability that a randomly sampled person from one group scores higher than a randomly sampled person from the other group. Let $Y^{(1)}$ and $Y^{(0)}$ denote the outcome of a randomly sampled person from the treatment and control group, respectively. The probability of superiority is
+$$
+\theta = P\!\left(Y^{(1)} > Y^{(0)}\right).
+$$ {#eq-ps}
+A value of 0.5 means that the two groups are indistinguishable, and a value of 0.75 means that the person from the treatment group has the higher score in three pairs out of four. When the outcome is normally distributed in both groups with a common standard deviation, the probability of superiority is a function of the standardized mean difference $\delta = (\mu_1 - \mu_0)/\sigma$ [@grissom1994; @ruscio2008],
+$$
+\theta = \Phi\!\left(\frac{\delta}{\sqrt{2}}\right),
+$$ {#eq-ps-normal}
+where $\Phi$ is the cumulative distribution function of the standard normal distribution. The factor $\sqrt{2}$ arises because the difference between two independent draws has twice the variance of a single draw.
+
+@dunlap1994 generalized this effect size to the relationship between two continuous variables $X$ and $Y$. Let $(X_1, Y_1)$ and $(X_2, Y_2)$ be the scores of two randomly sampled people. The *bivariate probability of superiority* is the probability that the person with the higher predictor score also has the higher outcome,
+$$
+\theta_b = P\!\left(Y_1 > Y_2 \mid X_1 > X_2\right).
+$$ {#eq-pbs}
+This is the probability that a randomly sampled pair is concordant, and it is related to Kendall's rank correlation by $\tau = 2\theta_b - 1$ [@kendall1938]. If $X$ and $Y$ are bivariate normal with correlation $\rho$, then
+$$
+\theta_b = \frac{1}{2} + \frac{\arcsin(\rho)}{\pi},
+$$ {#eq-pbs-normal}
+so that a correlation of 0.50 corresponds to $\theta_b = 0.67$ and a correlation of 0.8 to $\theta_b = 0.80$ [@dunlap1994]. Under bivariate normality this is also the probability that a person who is above the mean on $X$ is above the mean on $Y$, which is the quantity that @li2019 estimate without the normality assumption.
+
+@eq-pbs is a useful summary, but it does not answer the question that arises in a decision between two specific people. In the clinical example, the probability that the higher scorer recovers better is not the same when the two patients differ by one point as when they differ by thirty points on the prognostic score, and the bivariate probability of superiority averages over all such differences. The quantity needed for the decision is the probability of superiority at the observed difference between the two patients.
+
+This paper introduces the probability of outcome superiority curve (POSC), which is the conditional probability that the person with the higher predictor score has the higher outcome, expressed as a function of the difference in the predictor, and describes the [R]{.proglang} package [posc]{.pkg} [@posc] that implements it. The package is available from the Comprehensive [R]{.proglang} Archive Network (CRAN) at <https://CRAN.R-project.org/package=posc>. @sec-posc defines the curve, establishes properties that hold for any joint distribution, and derives the curve under bivariate normality for a single predictor, for a composite of several predictors and for the predictions of a linear model. @sec-empirical develops an empirical version that is estimated from raw data without a distributional assumption. @sec-software describes the design of the package, @sec-illustrations illustrates it with clinical examples, and @sec-summary concludes. Existing [R]{.proglang} software for common language effect sizes, for example the [effectsize]{.pkg} package [@benshachar2020], implements the probability of superiority for group differences. To my knowledge, no software implements the curve for correlations.
+
+## Probability of outcome superiority curves {#sec-posc}
+
+### Definition and properties
+
+Let $(X_1, Y_1)$ and $(X_2, Y_2)$ be the predictor and outcome scores of two people sampled independently from the same population, and let $\Delta = X_1 - X_2$ be their difference on the predictor. The probability of outcome superiority curve is the conditional probability that the first person has the higher outcome, as a function of the difference in the predictor:
+$$
+\theta(\Delta) = P\!\left(Y_1 > Y_2 \mid X_1 - X_2 = \Delta\right).
+$$ {#eq-posc}
+For a positive relationship the curve equals 0.5 when the two people have the same predictor score and increases toward 1 as the difference increases. The curve answers the clinician's question directly. If patient A scores $\Delta$ points higher than patient B on a prognostic score, $\theta(\Delta)$ is the probability that patient A will have the better outcome.
+
+Three properties hold for every POSC, regardless of the joint distribution of $X$ and $Y$, provided that the outcome is continuous. First, $\theta(0) = 1/2$, two people with the same predictor score are equally likely to have the higher outcome. Second, because the two people are exchangeable,
+$$
+\theta(-\Delta) = 1 - \theta(\Delta).
+$$ {#eq-symmetry}
+If the first person is $\Delta$ points below the second, the probability that the first person has the higher outcome is one minus the probability for the pair with the roles reversed. The curve is therefore point-symmetric about $(0, 1/2)$, and when it is monotone it is a sigmoid with its inflection point at $\Delta = 0$. The half of the curve over $\Delta \geq 0$ contains all of the information, and it is the half that the package plots by default, but the full curve is sometimes more informative to display (@fig-family, right). Third, the bivariate probability of superiority is the POSC averaged over the distribution of the difference between two randomly sampled people,
+$$
+\theta_b = E\!\left[\theta(\Delta) \mid \Delta > 0\right],
+$$ {#eq-average}
+which follows from @eq-pbs by conditioning on $\Delta$. That is, Dunlap's single value is the average of the POSC, weighted by how often each difference occurs. Two populations can have the same $\theta_b$ and very different curves, which is why the curve is the more informative summary.
+
+### Bivariate normality {#sec-normal}
+
+Assume that $X$ and $Y$ are bivariate normal with means $\mu_X$ and $\mu_Y$, standard deviations $\sigma_X$ and $\sigma_Y$, and correlation $\rho$. Because the two people are independent draws from the same bivariate normal distribution, their differences $(X_1 - X_2, Y_1 - Y_2)$ are also bivariate normal, with means of zero, variances $2\sigma_X^2$ and $2\sigma_Y^2$, and the same correlation $\rho$. The conditional distribution of a bivariate normal variable given the other variable is normal, so that
+$$
+Y_1 - Y_2 \mid \Delta \;\sim\; \mathcal{N}\!\left(\rho\,\frac{\sigma_Y}{\sigma_X}\,\Delta,\; 2\sigma_Y^2(1 - \rho^2)\right).
+$$ {#eq-conditional}
+@fig-conditionals shows this relationship for two people with predictor scores $X_1$ and $X_2$, for a small and a large difference $\Delta$. The conditional distributions of the outcome are two normal distributions with the same variance, whose means are separated in proportion to $\rho$ and to $\Delta$. The POSC is the probability that the difference in @eq-conditional is positive, which is the area of its distribution above zero, and this area increases with $\Delta$:
+$$
+\theta(\Delta) = \Phi\!\left(\frac{\rho\,\Delta}{\sigma_X\sqrt{2(1 - \rho^2)}}\right).
+$$ {#eq-posc-normal}
+The quantity $\rho\Delta / (\sigma_X\sqrt{1 - \rho^2})$ is the standardized mean difference between the two conditional outcome distributions in @fig-conditionals, so the POSC is the probability of superiority of @eq-ps-normal applied to those two distributions. In other words, at each difference in the predictor, the correlation is converted into a comparison between two groups. Averaging @eq-posc-normal over the half-normal distribution of $|\Delta|/\sigma_X$ gives @eq-pbs-normal, as @eq-average requires.
+
+```{r}
+#| label: fig-conditionals
+#| echo: false
+#| fig-cap: "From the bivariate normal distribution to the POSC, for $\\rho = 0.5$ and a predictor in standard deviation units. Panels A to C concern two people whose predictor scores differ by a small amount, $\\Delta = X_1 - X_2 = 0.5\\sigma_X$; panels D to F concern two people who differ by a large amount, $\\Delta = 2\\sigma_X$. A, D: contours of the joint distribution of $X$ and $Y$; the dashed lines mark the predictor scores $X_2$ (blue) and $X_1$ (red) of the two people, and the points mark the conditional means of the outcome. B, E: the conditional distributions of the outcome, $Y \\mid X_2$ (blue) and $Y \\mid X_1$ (red), which are normal with the same variance and with means separated in proportion to $\\rho\\Delta$. C, F: the distribution of the difference $Y_1 - Y_2$ given $\\Delta$, @eq-conditional; the shaded area above zero is $\\theta(\\Delta) = P(Y_1 > Y_2 \\mid \\Delta)$, @eq-posc-normal, which increases from 0.58 to 0.79 as $\\Delta$ increases. G: the POSC for $\\rho = 0.5$ with the two differences marked; the shaded areas in C and F are the heights of the curve at those differences."
+#| fig-width: 9
+#| fig-height: 10.6
+rho <- 0.5
+cols <- c("1" = "#B2182B", "2" = "#1F5A96")
+ellipse <- function(level) {
+  th <- seq(0, 2 * pi, length.out = 200)
+  rad <- sqrt(qchisq(level, df = 2))
+  L <- t(chol(matrix(c(1, rho, rho, 1), 2)))
+  pts <- t(L %*% rbind(rad * cos(th), rad * sin(th)))
+  data.frame(x = pts[, 1], y = pts[, 2], level = level)
+}
+contours <- do.call(rbind, lapply(c(0.2, 0.5, 0.8, 0.95), ellipse))
+theta_fun <- function(d) pnorm(rho * d / sqrt(2 * (1 - rho^2)))
+panel_theme <- theme_classic(base_size = 11) +
+  theme(axis.line = element_line(colour = "grey35", linewidth = 0.4),
+        axis.ticks = element_line(colour = "grey35", linewidth = 0.4),
+        plot.margin = margin(4, 8, 4, 4),
+        aspect.ratio = 1)
+
+panel_joint <- function(x1, x2) {
+  pts <- data.frame(x = c(x2, x1), y = rho * c(x2, x1), who = c("2", "1"))
+  ggplot(contours, aes(x, y, group = level)) +
+    geom_path(colour = "grey75", linewidth = 0.45) +
+    geom_segment(data = pts, aes(x = x, xend = x, y = -3.6, yend = 2.6,
+                                 colour = who),
+                 inherit.aes = FALSE, linetype = "22", linewidth = 0.5) +
+    geom_point(data = pts, aes(x, y, colour = who), inherit.aes = FALSE,
+               size = 2.6) +
+    annotate("segment", x = x2, xend = x1, y = 2.9, yend = 2.9,
+             linewidth = 0.4, colour = "grey20",
+             arrow = arrow(ends = "both", length = unit(0.1, "cm"),
+                           type = "closed")) +
+    annotate("text", x = (x1 + x2) / 2, y = 3.3,
+             label = sprintf("Delta == %s * sigma[X]", x1 - x2),
+             parse = TRUE, size = 3.4) +
+    annotate("text", x = c(x2, x1), y = -3.3, label = c("X[2]", "X[1]"),
+             parse = TRUE, hjust = c(1.2, -0.2),
+             colour = unname(cols[c("2", "1")]), size = 3.6) +
+    scale_colour_manual(values = cols, guide = "none") +
+    scale_x_continuous(breaks = NULL) +
+    scale_y_continuous(breaks = NULL) +
+    coord_equal(xlim = c(-3.6, 3.6), ylim = c(-3.6, 3.6), expand = FALSE) +
+    labs(x = "Predictor (X)", y = "Outcome (Y)") +
+    panel_theme
+}
+
+panel_cond <- function(x1, x2) {
+  y <- seq(-3.3, 3.3, length.out = 300)
+  d <- rbind(
+    data.frame(y = y, f = dnorm(y, rho * x2, sqrt(1 - rho^2)), who = "2"),
+    data.frame(y = y, f = dnorm(y, rho * x1, sqrt(1 - rho^2)), who = "1"))
+  d$f <- d$f / max(d$f)
+  top <- 1
+  ggplot(d, aes(y, f, colour = who)) +
+    geom_line(linewidth = 0.9) +
+    geom_vline(xintercept = rho * c(x2, x1), colour = unname(cols[c("2", "1")]),
+               linetype = "22", linewidth = 0.4) +
+    annotate("text", x = c(-2.1, 2.1), y = top * 0.62,
+             label = c("Y ~ '|' ~ X[2]", "Y ~ '|' ~ X[1]"), parse = TRUE,
+             colour = unname(cols[c("2", "1")]), size = 3.4) +
+    scale_colour_manual(values = cols, guide = "none") +
+    scale_x_continuous(breaks = c(-2, 0, 2)) +
+    scale_y_continuous(breaks = NULL, limits = c(0, 1.3), expand = c(0, 0)) +
+    labs(x = "Outcome (Y)", y = "Density") +
+    panel_theme
+}
+
+panel_diff <- function(x1, x2) {
+  dl <- x1 - x2
+  m <- rho * dl
+  sdv <- sqrt(2 * (1 - rho^2))
+  v <- seq(-3.2, 4.4, length.out = 400)
+  d <- data.frame(v = v, f = dnorm(v, m, sdv))
+  d$f <- d$f / max(d$f)
+  ggplot(d, aes(v, f)) +
+    geom_area(data = d[d$v >= 0, ], fill = "#1F5A96", alpha = 0.22) +
+    geom_line(linewidth = 0.9, colour = "grey25") +
+    geom_vline(xintercept = 0, linetype = "22", linewidth = 0.4,
+               colour = "grey35") +
+    annotate("text", x = 4.2, y = 1.17, hjust = 1,
+             label = sprintf("theta(Delta) == %s", fmt(theta_fun(dl))),
+             parse = TRUE, size = 3.6) +
+    scale_x_continuous(breaks = c(-2, 0, 2, 4)) +
+    scale_y_continuous(breaks = NULL, limits = c(0, 1.3), expand = c(0, 0)) +
+    labs(x = expression(Y[1] - Y[2]), y = "Density") +
+    panel_theme
+}
+
+d_small <- 0.5
+d_large <- 2
+p_g <- autoplot(posc_uni(r = rho, predictor_name = "predictor",
+                         outcome_name = "outcome"),
+                mark = c(d_small, d_large)) +
+  theme(plot.margin = margin(10, 8, 4, 4))
+wrap_plots(
+  panel_joint(d_small / 2, -d_small / 2), panel_cond(d_small / 2, -d_small / 2),
+  panel_diff(d_small / 2, -d_small / 2),
+  panel_joint(d_large / 2, -d_large / 2), panel_cond(d_large / 2, -d_large / 2),
+  panel_diff(d_large / 2, -d_large / 2),
+  p_g,
+  design = "ABC\nDEF\nGGG", heights = c(1, 1, 1.2)) +
+  plot_annotation(tag_levels = "A")
+```
+
+@fig-family (left) shows the curve for several values of $\rho$ with the predictor in standard deviation units. A correlation of 0.3, conventionally described as medium, gives a person who is one standard deviation higher on the predictor only a `r fmt(100 * pnorm(0.3 / sqrt(2 * (1 - 0.09))), 0)`% probability of the higher outcome. The curves for different correlations differ little near $\Delta = 0$ and differ most at large differences, so the practical value of a stronger predictor lies mainly in the probabilities it provides for people who are far apart on the predictor. Inverting @eq-posc-normal gives the difference required to reach a given probability,
+$$
+\Delta(\theta) = \frac{\sigma_X\sqrt{2(1-\rho^2)}}{\rho}\,\Phi^{-1}(\theta),
+$$ {#eq-inverse}
+which answers questions such as how far apart two patients' scores must be before the probability of correctly identifying the patient with the better outcome reaches 75%. For $\rho = 0.5$ the required difference is `r fmt(sqrt(2 * 0.75) / 0.5 * qnorm(0.75), 2)` standard deviations.
+
+```{r}
+#| label: fig-family
+#| echo: false
+#| fig-cap: "Normal-theory POSCs. Left: curves for population correlations $\\rho$ from 0.1 to 0.9 over differences of 0 to 3 standard deviations of the predictor, each labelled along its path. Right: the full curve for $\\rho = 0.5$ estimated from $n = 100$, over negative and positive differences, with its 95% confidence band. The curve passes through 0.5 at a difference of zero and is point-symmetric about that point, so the two halves carry the same information. Marked points show the probabilities at differences of one standard deviation in each direction."
+#| fig-width: 10
+#| fig-height: 4.2
+rhos <- c(0.1, 0.3, 0.5, 0.7, 0.9)
+fits <- lapply(rhos, function(r) {
+  posc_uni(r = r, predictor_name = "predictor", outcome_name = "outcome")
+})
+names(fits) <- paste0("\u03c1 = ", fmt(rhos, 1))
+blues <- c("#9ECAE1", "#6BAED6", "#3182BD", "#08519C", "#08306B")
+fam <- posc_comp(fits)
+p_left <- label_paths(fam, hjust = c(0.8, 0.7, 0.6, 0.5, 0.3),
+                      colors = blues)
+p_right <- autoplot(posc_uni(r = 0.5, n = 100, predictor_name = "predictor",
+                             outcome_name = "outcome"),
+                    full = TRUE, mark = c(-1, 1))
+p_left | p_right
+```
+
+#### Estimation and confidence bands
+
+A sample estimate is obtained by replacing $\rho$ and $\sigma_X$ with the sample correlation $r$ and the sample standard deviation $s_X$,
+$$
+\hat\theta(\Delta) = \Phi\!\left(\frac{r\,\Delta}{s_X\sqrt{2(1 - r^2)}}\right).
+$$ {#eq-posc-sample}
+Because @eq-posc-normal is monotone in $\rho$ at every fixed $\Delta$, a confidence interval for $\rho$ maps directly onto a confidence band for the curve. The package uses the Fisher transformation [@fisher1921], $z = \operatorname{artanh}(r)$, which has an approximate standard error of $1/\sqrt{n - 3}$. A $100(1 - \alpha)$% confidence interval for $\rho$ is
+$$
+\left[\rho_L, \rho_U\right] = \tanh\!\left(\operatorname{artanh}(r) \pm z_{1 - \alpha/2}\,\frac{1}{\sqrt{n - 3}}\right),
+$$ {#eq-fisher}
+and substituting $\rho_L$ and $\rho_U$ for $r$ in @eq-posc-sample gives the lower and upper limits of the band at each $\Delta$ (for negative $\Delta$ the limits are exchanged, consistent with @eq-symmetry). The band is pointwise, which means that it has the stated coverage at any single difference. This is the appropriate guarantee for a decision about one pair of people.
+
+### Composites of several predictors {#sec-multi}
+
+Clinical prognosis rarely depends on a single predictor. When several predictors are combined using the regression weights that best predict the outcome, the composite correlates with the outcome at the multiple correlation $R$. Let $\mathbf{R}_{xx}$ be the correlation matrix of the predictors and $\mathbf{r}_{xy}$ the vector of correlations between the predictors and the outcome. Then
+$$
+R^2 = \mathbf{r}_{xy}^\top\,\mathbf{R}_{xx}^{-1}\,\mathbf{r}_{xy}.
+$$ {#eq-multiple-r}
+Under multivariate normality the composite and the outcome are bivariate normal, so the POSC for a difference of $\Delta$ standard deviations on the composite is @eq-posc-normal with $\rho$ replaced by $R$ and $\sigma_X = 1$. A sample multiple correlation is biased upward because the weights are estimated from the same sample. The usual correction replaces $R^2$ with the adjusted value $1 - (1 - R^2)(n - 1)/(n - k - 1)$ for $k$ predictors [@cohen2003], and the package uses the square root of the adjusted value by default. The sampling distribution of $R$ is skewed and its variance depends on $k$, so the Fisher band is only approximate in this case. The package applies @eq-fisher with a standard error of $1/\sqrt{n - k - 2}$ and truncates the interval at zero, and the resulting band should be treated as approximate. @fig-composite illustrates both points using the correlation matrix of @sec-illustrations.
+
+```{r}
+#| label: fig-composite
+#| echo: false
+#| fig-cap: "POSCs for a composite of several predictors. Left: curves for three single prognostic measures and for their optimally weighted composite, from the illustrative correlation matrix of @sec-illustrations: baseline function (BF, correlation 0.51 with recovery), clinician rating (CR, 0.38), treatment adherence (AD, 0.31), and the composite (unadjusted multiple correlation 0.63). Right: the composite and the best single measure (BF) estimated from $n = 100$ patients, with 95% confidence bands (approximate for the composite). Labels sit on the curves."
+#| fig-width: 10
+#| fig-height: 4.4
+r_prog <- matrix(c(1.00, 0.30, 0.00, 0.51,
+                   0.30, 1.00, 0.10, 0.38,
+                   0.00, 0.10, 1.00, 0.31,
+                   0.51, 0.38, 0.31, 1.00), 4, 4,
+  dimnames = rep(list(c("Function", "Rating", "Adherence", "Recovery")), 2))
+pn <- "predictor"
+on <- "recovery"
+yl <- "Probability of better recovery"
+singles <- posc_comp(
+  "BF (0.51)" = posc_uni(0.51, predictor_name = pn, outcome_name = on),
+  "CR (0.38)" = posc_uni(0.38, predictor_name = pn, outcome_name = on),
+  "AD (0.31)" = posc_uni(0.31, predictor_name = pn, outcome_name = on),
+  "Composite (0.63)" = posc_multi(r_prog, n = 1e6, outcome = "Recovery",
+                                  predictor_name = pn, outcome_name = on))
+p_left <- label_paths(singles, hjust = c(0.55, 0.7, 0.8, 0.4), ci = FALSE,
+                      ylab = yl)
+small <- posc_comp(
+  "Composite" = posc_multi(r_prog, n = 100, outcome = "Recovery",
+                           predictor_name = pn, outcome_name = on),
+  "BF alone" = posc_uni(0.51, n = 100, predictor_name = pn,
+                        outcome_name = on))
+p_right <- label_paths(small, hjust = c(0.4, 0.7), ylab = yl)
+p_left | p_right
+```
+
+### Predictions of a linear model {#sec-lm}
+
+The same reasoning applies to a fitted linear model. The fitted values $\hat Y$ of the model are a composite of its predictors, and their correlation with the observed outcome is the multiple correlation of the model. Treating $\hat Y$ as the predictor gives a POSC for two patients who differ by $\Delta$ in their *predicted* outcomes, that is, the probability that the patient with the higher predicted outcome has the higher observed outcome. In this case $\Delta$ is in the units of the outcome and $\sigma_X$ is the standard deviation of the fitted values. This version of the curve describes how reliably the model orders two cases.
+
+## Empirical POSCs {#sec-empirical}
+
+### Motivation
+
+@eq-posc-normal depends on the assumption of bivariate normality, and the assumption matters in practice. If the outcome is skewed, or the relationship is monotone but not linear, the Pearson correlation understates the rank association and the normal-theory curve is too low. If the relationship has a ceiling, the normal-theory curve continues to increase when the true curve becomes flat. If the relationship is nonmonotone, a correlation cannot describe it at all. A POSC is defined for any joint distribution, so the natural solution is to estimate the curve directly from the data.
+
+### Pairwise construction and model
+
+Every pair of people in a sample is a realization of the definition in @eq-posc. For people $i$ and $j$ with $x_i \neq x_j$, we record the difference in the predictor $\Delta_{ij} = x_i - x_j$ and an indicator of whether the person with the higher predictor score also has the higher outcome,
+$$
+c_{ij} = \mathbf{1}\!\left[(x_i - x_j)(y_i - y_j) > 0\right] + \tfrac{1}{2}\,\mathbf{1}\!\left[y_i = y_j\right],
+$$ {#eq-concordance}
+where ties on the outcome count as one half. A sample of $n$ people gives $n(n-1)/2$ pairs, and the mean of $c_{ij}$ over all pairs is the sample estimate of $\theta_b$ in @eq-pbs. The POSC is the regression of $c_{ij}$ on $|\Delta_{ij}|$, that is, the proportion of concordant pairs among pairs that differ by a given amount on the predictor.
+
+The regression must satisfy @eq-symmetry, and the simplest way to ensure this is to build the symmetry into the model. The logit of the curve is modeled as an odd function of the difference,
+$$
+\operatorname{logit}\,\theta(\Delta) = \operatorname{sign}(\Delta)\, g(|\Delta|), \qquad g(d) = \sum_{k=1}^{K} \beta_k B_k(d),
+$$ {#eq-spline}
+where the $B_k$ are the basis functions of a natural cubic spline in $d = |\Delta|$ with no intercept term [@hastie2009]. The basis is constructed so that every $B_k(0) = 0$, which forces $\theta(0) = 1/2$, and the factor $\operatorname{sign}(\Delta)$ provides the symmetry. Because a natural spline has zero curvature at its boundary, the two halves of the curve join smoothly at $\Delta = 0$. The spline is a flexible parametric smoother in the sense that it has a finite number of coefficients. The curve is empirical in the sense that no assumption is made about the joint distribution of $X$ and $Y$. The number of degrees of freedom $K$ controls the flexibility of the curve, with interior knots placed at quantiles of the observed differences. The default is $K = 3$, and $K = 1$ gives a curve that is linear on the logit scale. The curve is not constrained to be monotone, for reasons given in @sec-nonmonotone. The coefficients $\beta_k$ are estimated by maximizing the binomial likelihood of the concordance indicators, which is ordinary logistic regression. The responses are shrunk by a negligible amount toward one half so that a solution exists even when large differences order the outcome perfectly. For large samples a random subset of pairs is used.
+
+### Confidence bands and binned checks
+
+The pairs are not independent, because every person appears in $n - 1$ of them. Standard errors from the logistic regression treat the pairs as independent and are therefore much too small. The package instead uses a nonparametric bootstrap that resamples people [@efron1979; @efron1993]. In each resample, $n$ people are sampled with replacement, the pairs are rebuilt (omitting pairs of a person with their own duplicate, which carry no information), @eq-spline is refitted with the knots held fixed, and the procedure is repeated. The pointwise band at each $\Delta$ is formed from the percentiles of the bootstrap curves. One thousand resamples give a stable 95% band.
+
+The fitted curve can also be compared with the observed proportions. The pairs are grouped into bins of $|\Delta|$, the proportion of concordant pairs is computed in each bin, and the proportions are plotted as points on the curve. Because these points are interpreted as a set, they are given simultaneous rather than pointwise intervals. The same bootstrap provides the joint sampling distribution of the bin proportions, and a sup-$t$ critical value [@montielolea2019] on the empirical logit scale gives intervals that cover all of the true proportions with the stated probability and that are asymmetric when a proportion is near 0 or 1. If the curve passes through these intervals, the spline is flexible enough. @fig-pairs illustrates the construction with simulated data and a skewed outcome.
+
+```{r}
+#| label: fig-pairs
+#| echo: false
+#| fig-cap: "Construction of an empirical POSC. Left: 150 simulated observations with a skewed outcome ($y = \\exp(0.8x + \\epsilon)$); three of the 11,175 pairs are drawn as segments, blue if concordant (the observation higher on $x$ is also higher on $y$) and red if discordant. Right: the empirical POSC (solid line) with its 95% bootstrap band, the observed proportion of concordant pairs in eight bins of $|\\Delta|$ with 95% simultaneous intervals (points and whiskers), and the normal-theory curve for the same Pearson correlation (dashed)."
+#| fig-width: 10
+#| fig-height: 4.4
+x_sk <- rnorm(150)
+y_sk <- exp(0.8 * x_sk + rnorm(150, sd = 0.6))
+emp_sk <- posc_emp(x_sk, y_sk, bins = 8, predictor_name = "x",
+                   outcome_name = "y")
+sk <- data.frame(x = x_sk, y = y_sk)
+ord <- order(x_sk)
+pick <- rbind(c(ord[20], ord[110]), c(ord[60], ord[140]), c(ord[75], ord[95]))
+seg <- data.frame(x = x_sk[pick[, 1]], y = y_sk[pick[, 1]],
+                  xend = x_sk[pick[, 2]], yend = y_sk[pick[, 2]])
+seg$type <- ifelse((seg$xend - seg$x) * (seg$yend - seg$y) > 0,
+                   "concordant pair", "discordant pair")
+p_left <- ggplot(sk, aes(x, y)) +
+  geom_point(alpha = 0.35, colour = "grey40") +
+  geom_segment(data = seg, aes(x = x, y = y, xend = xend, yend = yend,
+                               colour = type), linewidth = 1) +
+  geom_point(data = seg, aes(x, y, colour = type), size = 2.5) +
+  geom_point(data = seg, aes(xend, yend, colour = type), size = 2.5) +
+  scale_colour_manual(values = c("#1F5A96", "#B2182B"), guide = "none") +
+  labs(x = "Predictor (x)", y = "Outcome (y)") +
+  theme_classic(base_size = 12)
+p_right <- autoplot(emp_sk, bins = TRUE, reference = TRUE)
+p_left | p_right
+```
+
+### Nonmonotone relationships {#sec-nonmonotone}
+
+A POSC describes pairs, and it averages over the location of the pair in the distribution of the predictor. Consider an inverted-U relationship, $Y = -(X - c)^2$, such as the benefit of a drug that is greatest at an optimal dose $c$, ineffective below it and toxic above it. For two patients who differ by $\Delta$, the one with the higher value of $X$ has the higher outcome exactly when their midpoint is below the optimum. If $X$ is normal with mean zero, the midpoint is independent of the difference, and the POSC is constant at $\Phi(c\sqrt{2})$ for every $\Delta > 0$. When the optimum is at the mean of the predictor ($c = 0$), the POSC equals 0.5 everywhere, even though the predictor determines the outcome exactly. A higher value of $X$ is beneficial for pairs below the optimum and harmful for pairs above it, and the two cases cancel in the population. When the optimum is half a standard deviation above the mean, the curve increases immediately to about `r fmt(100 * pnorm(0.5 * sqrt(2)), 0)`% and remains there, so a larger difference on the predictor gives no further increase in the probability. The empirical POSC recovers curves of this kind, whereas the normal-theory curve, which depends only on the linear correlation, does not, and this is why the empirical method does not impose monotonicity. @fig-invu shows the two curves for simulated data in which clinical benefit is an inverted-U function of dose, with the optimum half a standard deviation above the mean dose, plus random error. A more flexible spline (`df = 4`) is used so that the curve can become flat.
+
+```{r}
+#| label: empirical-u
+dose <- rnorm(300)
+benefit <- -(dose - 0.5)^2 + rnorm(300, sd = 0.5)
+emp_u <- posc_emp(dose, benefit, df = 4, bins = 8, standardize = TRUE,
+  predictor_name = "dose", outcome_name = "benefit")
+predict(emp_u, delta = c(0.5, 1, 2))
+```
+
+The Pearson correlation is `r fmt(cor(dose, benefit), 2)`, so the normal-theory curve increases steadily toward 1. The empirical curve increases rapidly over small differences, where the random error dominates, and then becomes flat near the theoretical value of `r fmt(pnorm(0.5 * sqrt(2)), 2)`. Beyond a moderate difference, a higher dose does not increase the probability of greater benefit, because for pairs above the optimum the higher dose is harmful. Neither a correlation nor the normal-theory curve can describe this relationship. The empirical POSC, together with its binned proportions, incorporates the shape of the relationship into the effect size.
+
+```{r}
+#| label: fig-invu
+#| echo: false
+#| fig-cap: "An inverted-U dose-response relationship. Left: simulated clinical benefit as an inverted-U function of dose with its optimum 0.5 standard deviations above the mean dose ($n = 300$). Right: the empirical POSC (solid line) with its 95% bootstrap band and binned proportions, and the normal-theory curve for the same Pearson correlation (dashed); the normal-theory curve rises toward 1 while the empirical curve plateaus near $\\Phi(0.5\\sqrt{2}) = 0.76$."
+#| fig-width: 10
+#| fig-height: 4.4
+p_left <- ggplot(data.frame(dose, benefit), aes(dose, benefit)) +
+  geom_point(alpha = 0.55, colour = "#1F5A96") +
+  labs(x = "Dose (SD units)", y = "Clinical benefit") +
+  theme_classic(base_size = 12)
+p_right <- autoplot(emp_u, bins = TRUE, reference = TRUE) +
+  labs(y = "Probability of greater benefit")
+p_left | p_right
+```
+
+## Software {#sec-software}
+
+### Design
+
+The [posc]{.pkg} package is written entirely in [R]{.proglang} and depends only on [ggplot2]{.pkg} [@ggplot2] in addition to the base and recommended packages. Four constructor functions, one for each type of curve, return an object of class [posc]{.class}:
+
+- `posc_uni(r, n, sd_x)` computes the normal-theory curve of @eq-posc-sample from a correlation, a sample size and the standard deviation of the predictor (@sec-normal).
+- `posc_multi(r_mat, n, outcome)` computes the curve for the optimally weighted composite implied by a correlation matrix (@sec-multi).
+- `posc_lm(model)` computes the curve for the fitted values of a model estimated with `lm()` (@sec-lm).
+- `posc_emp(x, y)` estimates the empirical curve of @sec-empirical from raw data, with its bootstrap band and binned proportions.
+
+A [posc]{.class} object is a list. Its main components are `curve`, a data frame containing the curve and its confidence limits on a symmetric grid of differences, and the quantities `r`, `n`, `level` and `sd_x` from which the curve was computed. The component `details` holds information specific to the type of curve (for an empirical curve, the spline knots and coefficients, the number of pairs and bootstrap resamples, and the binned proportions), and a prediction function evaluates the curve, with its confidence interval at any level, at arbitrary differences. The constructors differ only in how they build the prediction function, so the methods for the class are shared:
+
+- `print()` describes the curve and reports the probability at a few differences.
+- `summary(object, delta)` and `predict(object, delta, level)` return the probability and its confidence limits at any differences as a data frame.
+- `as.data.frame()` returns the whole curve.
+- `plot()` and `autoplot()` draw it.
+
+The plot methods return [ggplot2]{.pkg} objects, so anything not covered by their arguments, such as the wording of an axis label, can be changed in the usual way, for example with `labs()`. The methods take arguments for the common variations. Setting `full = TRUE` draws the full curve over negative and positive differences instead of the default half. Setting `mark = delta` marks and labels selected differences on the curve, and `mark_ci = TRUE` adds their confidence intervals. Setting `percent = TRUE` labels the probability axis in percentages. For empirical curves, `bins = TRUE` adds the binned proportions with their simultaneous intervals, and `reference = TRUE` adds the normal-theory curve for the same Pearson correlation. Two further functions operate on several curves. `posc_comp()` overlays any number of curves and tests whether their correlations differ (a Fisher $z$ test for two curves and a homogeneity test for more than two), returning an object of class `"posc_comparison"` with its own print and plot methods. `posc_bins()` returns the binned proportions of an empirical curve with their simultaneous intervals as a data frame. @fig-plots shows the main variations of the plot method for one curve.
+
+```{r}
+#| label: fig-plots
+#| echo: false
+#| fig-cap: "The plot method for a curve from `posc_uni(r = 0.5, n = 100, sd_x = 15)`. Top left: the default, the curve over positive differences with its 95% confidence band. Top right: `full = TRUE`, the full sigmoid. Bottom left: `mark = c(10, 20)`, `mark_ci = TRUE` and `percent = TRUE`, which label chosen differences with their probabilities and confidence intervals on a percentage axis. Bottom right: a comparison of two curves from `posc_comp()`, labelled along the curves."
+#| fig-width: 10
+#| fig-height: 8
+demo <- posc_uni(r = 0.5, n = 100, sd_x = 15,
+                 predictor_name = "prognostic score", outcome_name = "recovery")
+yl <- "Probability of better recovery"
+p_a <- autoplot(demo) + labs(y = yl)
+p_b <- autoplot(demo, full = TRUE) + labs(y = yl)
+p_c <- autoplot(demo, mark = c(10, 20), mark_ci = TRUE, percent = TRUE) +
+  labs(y = yl)
+two <- posc_comp(
+  "r = 0.5" = demo,
+  "r = 0.3" = posc_uni(r = 0.3, n = 100, sd_x = 15,
+                       predictor_name = "prognostic score",
+                       outcome_name = "recovery"))
+p_d <- label_paths(two, hjust = c(0.45, 0.7), ylab = yl)
+(p_a | p_b) / (p_c | p_d)
+```
+
+### Basic use
+
+The package is loaded in the usual way, and a curve is created with one of the constructors. The printed object reports the method, the correlation with its confidence interval, and the probability at differences of 0.5, 1 and 2 standard deviations of the predictor.
+
+```{r}
+#| label: basic
+library("posc")
+fit <- posc_uni(r = 0.5, n = 100)
+fit
+```
+
+The probability at any difference, with its confidence interval, is obtained with `predict()`, and the full curve with `as.data.frame()`.
+
+```{r}
+#| label: basic-predict
+predict(fit, delta = c(0.5, 1, 2))
+head(as.data.frame(fit, full = FALSE), 3)
+```
+
+## Illustrations {#sec-illustrations}
+
+### Prioritizing patients with a prognostic score
+
+A rehabilitation program has one place available and two eligible patients. At intake, patients complete a prognostic score (0 to 100, with higher values indicating a better prognosis) that is used to predict functional recovery at six months. Patient A scores 34 and patient B scores 22. A validation study of $n = 100$ earlier patients found a correlation of $r = 0.52$ between the score and recovery, and the standard deviation of the score among referred patients is 10. The two patients differ by $\Delta = 12$ points, so by @eq-posc-sample,
+$$
+\hat\theta(12) = \Phi\!\left(\frac{0.52 \times 12}{10\sqrt{2(1 - 0.52^2)}}\right) = \Phi(0.517) = 0.697.
+$$
+Patient A therefore has approximately a 70% probability of recovering better than patient B. In the package, the predictor and outcome can be named so that the output and plots are labeled:
+
+```{r}
+#| label: selection
+prog <- posc_uni(r = 0.52, n = 100, sd_x = 10,
+  predictor_name = "prognostic score", outcome_name = "recovery")
+predict(prog, delta = 12)
+```
+
+The 95% confidence interval extends from `r fmt(predict(prog, 12)$lower, 3)` to `r fmt(predict(prog, 12)$upper, 3)`, so the data support a modest advantage for patient A. @fig-selection shows the full curve with the two patients marked, and @tbl-selection, produced with `summary()`, gives the probabilities at other differences. A 30-point difference, three standard deviations, would increase the probability to `r fmt(predict(prog, 30)$p, 2)`. By @eq-inverse, a difference of `r fmt(10 * sqrt(2 * (1 - 0.52^2)) / 0.52 * qnorm(0.75), 1)` points is required before the higher scorer has a 75% probability of being the patient who recovers better.
+
+```{r}
+#| label: fig-selection
+#| fig-cap: "POSC for a prognostic score with $r = 0.52$, $n = 100$ and $s_X = 10$. The shaded region is the 95% confidence band. The marked point is the 12-point difference between the two patients, with its probability and confidence interval."
+#| fig-width: 6
+#| fig-height: 4.2
+#| out-width: 75%
+autoplot(prog, mark = 12, mark_ci = TRUE) +
+  labs(y = "Probability of better recovery")
+```
+
+```{r}
+#| label: selection-summary
+summary(prog, delta = c(5, 10, 12, 20, 30))
+```
+
+```{r}
+#| label: tbl-selection
+#| echo: false
+#| tbl-cap: "Probability that the patient with the higher prognostic score recovers better, at several differences in the score."
+sel_tab <- summary(prog, delta = c(5, 10, 12, 20, 30))
+sel_tab$ci <- paste0("[", fmt(sel_tab$lower, 3), ", ", fmt(sel_tab$upper, 3),
+                     "]")
+knitr::kable(sel_tab[, c("delta", "p", "ci")], digits = 3,
+             format = if (knitr::is_latex_output()) "latex" else "html",
+             booktabs = TRUE, longtable = FALSE,
+             col.names = c("Difference in prognostic score", "Probability",
+                           "95% CI"),
+             align = c("c", "c", "c"))
+```
+
+### Comparing prognostic measures
+
+Suppose that three measures taken at intake could be used to predict recovery, and that in validation data their correlations with recovery are 0.51 for a baseline functional assessment (BF), 0.38 for a clinician's global rating (CR) and 0.26 for a patient self-rating (PSR). These values are illustrative. `posc_comp()` accepts any number of curves, named or unnamed, and overlays them, and @fig-methods (left) shows the curves for the three correlations. The difference between the functional assessment and the clinician's rating appears modest as a difference in correlations, but it means that two patients one standard deviation apart are ordered correctly `r fmt(100 * pnorm(0.51 / sqrt(2 * (1 - 0.51^2))), 0)`% of the time by the assessment and `r fmt(100 * pnorm(0.38 / sqrt(2 * (1 - 0.38^2))), 0)`% of the time by the rating.
+
+```{r}
+#| label: methods
+methods <- posc_comp(
+  "BF (0.51)" = posc_uni(0.51, predictor_name = "predictor",
+                         outcome_name = "recovery"),
+  "CR (0.38)" = posc_uni(0.38, predictor_name = "predictor",
+                         outcome_name = "recovery"),
+  "PSR (0.26)" = posc_uni(0.26, predictor_name = "predictor",
+                          outcome_name = "recovery"))
+```
+
+When sample sizes are supplied, `posc_comp()` also tests whether the correlations differ. For two curves from independent validation samples of 100 and 120 patients:
+
+```{r}
+#| label: comp-test
+posc_comp(posc_uni(0.51, n = 100), posc_uni(0.38, n = 120))
+```
+
+### Composites and linear models
+
+`posc_multi()` accepts a correlation matrix of the predictors and the outcome. With an illustrative matrix in which baseline function, the clinician's rating and treatment adherence correlate 0.51, 0.38 and 0.31 with recovery and are modestly intercorrelated, the optimally weighted composite has a multiple correlation well above that of any single predictor:
+
+```{r}
+#| label: composite
+r_prog <- matrix(c(1.00, 0.30, 0.00, 0.51,
+                   0.30, 1.00, 0.10, 0.38,
+                   0.00, 0.10, 1.00, 0.31,
+                   0.51, 0.38, 0.31, 1.00), 4, 4,
+  dimnames = rep(list(c("Function", "Rating", "Adherence", "Recovery")), 2))
+comp <- posc_multi(r_prog, n = 500, outcome = "Recovery",
+  predictor_name = "predictor", outcome_name = "recovery")
+comp
+```
+
+The printed correlation is the adjusted multiple correlation of @sec-multi, and the unadjusted value, `r fmt(comp$details$r_unadjusted, 3)`, is reported with it. @fig-composite compares the curve for the composite with the curves for the single predictors. `posc_lm()` uses a fitted model instead of a correlation matrix. For a simulated data set of 200 patients in which recovery depends on baseline function and adherence:
+
+```{r}
+#| label: lm
+sim <- data.frame(baseline = rnorm(200), adherence = rnorm(200))
+sim$recovery <- sim$baseline + 0.5 * sim$adherence + rnorm(200)
+mod <- posc_lm(lm(recovery ~ baseline + adherence, data = sim))
+predict(mod, delta = c(0.5, 1, 2))
+```
+
+Here the differences are in units of predicted recovery, and the curve (@fig-methods, right) gives the probability that the patient with the higher predicted recovery has the higher observed recovery.
+
+```{r}
+#| label: fig-methods
+#| echo: false
+#| fig-cap: "POSCs for three prognostic measures and for a linear model. Left: normal-theory curves for three prognostic measures with illustrative correlations with recovery: a baseline functional assessment (BF, 0.51), a clinician's global rating (CR, 0.38) and a patient self-rating (PSR, 0.26). Right: the curve for the fitted values of a linear model with two predictors fitted to 200 simulated patients, with its 95% confidence band; the difference on the horizontal axis is in units of predicted recovery."
+#| fig-width: 10
+#| fig-height: 4.4
+p_left <- label_paths(methods, hjust = c(0.45, 0.6, 0.75),
+                      ylab = "Probability of better recovery")
+p_right <- autoplot(mod) + labs(y = "Probability of better recovery")
+p_left | p_right
+```
+
+### An empirical POSC: performance status and survival
+
+The `VA` data set in the [MASS]{.pkg} package [@venables2002] comes from a Veterans Administration trial of treatments for advanced lung cancer. The Karnofsky performance status of each patient at entry, a clinician's rating of functional ability from 0 to 100, is a widely used prognostic score, and survival time in days is strongly skewed, so the relationship between the two variables is monotone but far from bivariate normal. The patients who died during follow-up are used here, with survival time treated as a continuous outcome, and the few censored patients are omitted for the purpose of the illustration. `posc_emp()` takes the two variables, fits the spline model of @eq-spline, runs the bootstrap (1000 resamples by default) and computes the binned proportions (eight bins here). The printed output reports the Pearson correlation for reference, the degrees of freedom of the spline, and the numbers of pairs and resamples.
+
+```{r}
+#| label: empirical-va
+va <- MASS::VA[MASS::VA$status == 1, ]
+emp_va <- posc_emp(va$Karn, va$stime, bins = 8,
+  predictor_name = "Karnofsky score", outcome_name = "survival time")
+emp_va
+```
+
+```{r}
+#| label: empirical-va-ref
+#| echo: false
+ref_va <- posc_uni(cor(va$Karn, va$stime), n = nrow(va), sd_x = sd(va$Karn))
+```
+
+The Pearson correlation is `r fmt(cor(va$Karn, va$stime), 2)`, whereas the Spearman correlation is `r fmt(cor(va$Karn, va$stime, method = "spearman"), 2)`, and the difference between them corresponds to the difference between the empirical and normal-theory curves in @fig-empirical. For two patients whose Karnofsky scores differ by 20 points (one standard deviation), the empirical curve gives a probability of `r fmt(predict(emp_va, 20)$p, 2)` (95% CI [`r fmt(predict(emp_va, 20)$lower, 2)`, `r fmt(predict(emp_va, 20)$upper, 2)`]) that the patient with the higher score survives longer, compared with `r fmt(predict(ref_va, 20)$p, 2)` under normal theory. The binned proportions, returned by `posc_bins()`, follow the empirical curve closely and lie above the normal-theory curve over the whole range. Assuming normality here would substantially understate how reliably performance status orders survival. The figure combines the scatterplot and `autoplot(emp_va, bins = TRUE, reference = TRUE)`, with the vertical axis relabeled, using the [patchwork]{.pkg} package [@patchwork].
+
+```{r}
+#| label: empirical-bins
+posc_bins(emp_va)
+```
+
+```{r}
+#| label: fig-empirical
+#| echo: false
+#| fig-cap: "An empirical POSC for performance status and survival. Left: Karnofsky performance status at entry and survival time for the patients in the Veterans Administration lung cancer trial who died during follow-up. Right: the empirical POSC (solid line) with its 95% bootstrap band, the observed proportion of concordant pairs in eight bins of the difference in Karnofsky score with 95% simultaneous intervals (points and whiskers), and the normal-theory curve for the same Pearson correlation (dashed)."
+#| fig-width: 10
+#| fig-height: 4.4
+p_left <- ggplot(va, aes(Karn, stime)) +
+  geom_point(alpha = 0.55, colour = "#1F5A96") +
+  labs(x = "Karnofsky performance status", y = "Survival time (days)") +
+  theme_classic(base_size = 12)
+p_right <- autoplot(emp_va, bins = TRUE, reference = TRUE) +
+  labs(y = "Probability of longer survival")
+p_left | p_right
+```
+
+## Summary and discussion {#sec-summary}
+
+The probability of outcome superiority curve converts a correlation into the quantity that a decision requires, namely the probability that the person with the higher predictor score has the higher outcome, at the observed difference in the predictor. The curve contains the existing common language effect size for correlations as its average (@eq-average), it reduces to the probability of superiority for group differences at each level of the predictor (@eq-posc-normal), and it can be estimated either from a correlation under bivariate normality or directly from data without a distributional assumption. The [posc]{.pkg} package provides both approaches through one class of object with a small set of methods, so that a curve computed from a published correlation and a curve estimated from raw data are handled, plotted and compared in the same way.
+
+The curve is closely related to a statistic that is already widely used in clinical research. The concordance index of @harrell1982 is the probability that, of two patients, the one with the higher predicted risk has the worse outcome. It is the standard summary of the discrimination of a prognostic model, and for a continuous outcome it is equal to $\theta_b$ in @eq-pbs with the prediction of the model as the predictor. The POSC is the concordance index expressed as a function of the difference between the two patients on the predictor, and by @eq-average the index is the average of the curve. A model with a concordance index of 0.7 may discriminate well between patients who are far apart on its score and poorly between patients who are close together, and the curve shows which is the case.
+
+Although the examples in this paper are clinical, the curve applies wherever a continuous predictor is used to choose between people. Personnel selection is the most direct application. A validity coefficient relating a test score to job performance can be expressed as the probability that, of two applicants whose scores differ by a given amount, the higher scorer will perform better, which is the question the person making the hiring decision faces. Other examples include educational admissions and placement, and any setting in which a risk or prognostic score is used to allocate a limited resource.
+
+Several limitations should be noted. The curve describes a pair of people sampled from the population in which it was estimated. If the patients to whom the curve is applied are a restricted range of that population (for example, patients referred to a specialist clinic), or if the predictor is measured with error, the correlation used in @eq-posc-sample should be the one that applies to the decision at hand, corrected in the usual ways, because any bias in the correlation carries over to the curve. A curve evaluated at a difference of $\Delta$ describes which of two people is more likely to have the better outcome and says nothing about the outcome of either individual. A 70% probability of identifying the patient who will do better still implies an error rate of 30%. The normal-theory confidence band is accurate for a single predictor but only approximate for composites and linear models. The empirical curve requires the raw data and, because of the bootstrap, more computation than a formula. It should be preferred whenever the data are available and the relationship may be nonlinear, skewed or nonmonotone, and the binned proportions should be inspected to confirm that the spline is flexible enough. When only a correlation is available, which is the usual situation when a published study is being interpreted, the parametric curve is the only option, and its assumptions should be stated.
+
+## Computational details {#sec-computational}
+
+```{r}
+#| label: versions
+#| include: false
+r_ver <- paste(R.version$major, R.version$minor, sep = ".")
+pkg_ver <- function(p) as.character(packageVersion(p))
+```
+
+The results in this paper were obtained using [R]{.proglang} `r r_ver` [@rcore] with the [posc]{.pkg} `r pkg_ver("posc")`, [ggplot2]{.pkg} `r pkg_ver("ggplot2")`, [patchwork]{.pkg} `r pkg_ver("patchwork")`, [geomtextpath]{.pkg} `r pkg_ver("geomtextpath")` [@geomtextpath] and [MASS]{.pkg} `r pkg_ver("MASS")` packages. The three bootstrap fits take about two minutes in total. [R]{.proglang} itself and all packages used are available from CRAN at <https://CRAN.R-project.org/>, and the source of this paper, with a replication script, is available at <https://github.com/MatthewBJane/posc>.
+
+
+## Acknowledgments {.unnumbered}
+
+The author wrote the original manuscript and the core of the [posc]{.pkg} package. Claude, a large language model developed by Anthropic, was then used under the author's direction to revise the text and figures and to assist with extending and testing the code. The author specified the methods, reviewed and verified all code, analyses and results, and takes full responsibility for the content.
+
+
+## References {.unnumbered}
+
+::: {#refs}
+:::

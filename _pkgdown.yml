@@ -1,0 +1,58 @@
+url: https://matthewbjane.github.io/posc/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#1F5A96"
+    base_font: {google: "Source Sans 3"}
+    heading_font: {google: "Source Sans 3"}
+    code_font: {google: "Source Code Pro"}
+  math-rendering: mathjax
+
+home:
+  title: "posc: Probability of Outcome Superiority Curves"
+  sidebar:
+    structure: [links, paper, license, citation, authors, dev]
+    components:
+      paper:
+        title: Paper
+        text: >-
+          <a href="paper/index.html">Read the manuscript</a> (HTML) or
+          <a href="paper/index.pdf">download the PDF</a>.
+
+navbar:
+  structure:
+    left: [reference, paper, news]
+    right: [search, github]
+  components:
+    paper:
+      text: Paper
+      menu:
+        - text: Read online
+          href: paper/index.html
+        - text: PDF
+          href: paper/index.pdf
+
+reference:
+  - title: Creating a curve
+    desc: Each constructor returns a `"posc"` object.
+    contents:
+      - posc_uni
+      - posc_multi
+      - posc_lm
+      - posc_emp
+  - title: Working with a curve
+    contents:
+      - print.posc
+      - predict.posc
+      - as.data.frame.posc
+      - autoplot.posc
+      - posc_bins
+  - title: Comparing curves
+    contents:
+      - posc_comp
+      - autoplot.posc_comparison
+  - title: Package
+    contents:
+      - posc-package
+      - reexports
