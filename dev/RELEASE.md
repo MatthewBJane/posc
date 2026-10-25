@@ -96,6 +96,11 @@ JSS acknowledges by e-mail; first editorial screening usually takes a few
 weeks, review several months. Keep the GitHub repository and the website in
 place, since reviewers follow the links in the Computational details section.
 
+## Done so far
+
+posc 0.2.0 was published on CRAN on 2026-10-21 (DOI 10.32614/CRAN.package.posc)
+from commit f794ddf, tagged v0.2.0.
+
 ## 5. Zenodo (optional, for a citable DOI of the paper)
 
 Upload `submission/posc.pdf` at <https://zenodo.org/> (Upload > New upload,

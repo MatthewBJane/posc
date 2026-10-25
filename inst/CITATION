@@ -4,5 +4,6 @@ bibentry(
   author = person("Matthew B.", "Jané"),
   year = "2026",
   note = paste("R package version", meta$Version),
-  url = "https://github.com/MatthewBJane/posc"
+  url = "https://CRAN.R-project.org/package=posc",
+  doi = "10.32614/CRAN.package.posc"
 )

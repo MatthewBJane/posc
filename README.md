@@ -1,6 +1,8 @@
 # posc: Probability of Outcome Superiority Curves <img src="man/figures/logo.png" align="right" height="139" alt="posc hex logo" />
 
 <!-- badges: start -->
+[![CRAN status](https://www.r-pkg.org/badges/version/posc)](https://CRAN.R-project.org/package=posc)
+[![CRAN downloads](https://cranlogs.r-pkg.org/badges/grand-total/posc)](https://CRAN.R-project.org/package=posc)
 <!-- badges: end -->
 
 A correlation tells you how strongly a predictor and an outcome are related,
