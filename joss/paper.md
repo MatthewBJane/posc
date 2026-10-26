@@ -10,7 +10,7 @@ tags:
   - personnel selection
 authors:
   - name: Matthew B. Jané
-    # orcid: 0000-0000-0000-0000
+    orcid: 0000-0002-3121-7769
     affiliation: 1
 affiliations:
   - name: Department of Psychological Sciences, University of Connecticut, United States
