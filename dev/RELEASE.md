@@ -106,3 +106,26 @@ from commit f794ddf, tagged v0.2.0.
 Upload `submission/posc.pdf` at <https://zenodo.org/> (Upload > New upload,
 type Preprint), add the GitHub URL as a related identifier, publish, and put
 the DOI in the package `README.md` and `inst/CITATION`.
+
+## 6. JOSS (Journal of Open Source Software)
+
+The JOSS paper lives in `joss/` (`paper.md`, `paper.bib`, `empirical.png`).
+Every push that touches `joss/` builds the PDF with the Draft PDF workflow
+(Actions tab -> the run -> Artifacts -> paper). JOSS asks for 750-1750 words
+with the sections Summary, Statement of need, State of the field, Software
+design, Research impact statement, AI usage disclosure, Acknowledgements and
+References.
+
+1. Check the PDF from the workflow, then push.
+2. Submit at <https://joss.theoj.org/papers/new> with the repository URL
+   (https://github.com/MatthewBJane/posc), branch `main`, paper path
+   `joss/paper.md`, software version 0.2.0, and the "R" language tag. The
+   form asks for an ORCID and a short description.
+3. An editor opens a pre-review issue in openjournals/joss-reviews, then a
+   review issue with two reviewers. Reviewers open issues on this repository;
+   respond there and push fixes.
+4. At acceptance: tag a release (v0.2.x), archive it on Zenodo (link the
+   GitHub repository to Zenodo first so releases are archived automatically),
+   and post the version and the Zenodo DOI in the review issue. Make the
+   archive title and author list match the paper.
+5. Add the JOSS DOI to `inst/CITATION`, the README badges and the website.

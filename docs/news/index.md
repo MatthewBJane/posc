@@ -2,6 +2,8 @@
 
 ## posc 0.2.0
 
+CRAN release: 2026-10-21
+
 ### New features
 
 - [`posc_emp()`](https://matthewbjane.com/posc/reference/posc_emp.md)

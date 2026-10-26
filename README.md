@@ -93,6 +93,13 @@ $P(-\Delta) = 1 - P(\Delta)$. Pairs that share a person are not independent,
 so the confidence band comes from a bootstrap that resamples people, not
 pairs.
 
+## Getting help and contributing
+
+Bug reports and questions are welcome as [GitHub
+issues](https://github.com/MatthewBJane/posc/issues). See
+[CONTRIBUTING.md](CONTRIBUTING.md) for how to report a problem, ask for
+help, or propose a change.
+
 ## Development
 
 The core of this package was written by the author. Claude, a large language
