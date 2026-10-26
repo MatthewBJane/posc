@@ -1,11 +1,11 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://matthewbjane.com/posc/404.html</loc></url>
+<url><loc>https://matthewbjane.com/posc/CONTRIBUTING.html</loc></url>
 <url><loc>https://matthewbjane.com/posc/LICENSE-text.html</loc></url>
 <url><loc>https://matthewbjane.com/posc/LICENSE.html</loc></url>
 <url><loc>https://matthewbjane.com/posc/authors.html</loc></url>
 <url><loc>https://matthewbjane.com/posc/index.html</loc></url>
 <url><loc>https://matthewbjane.com/posc/news/index.html</loc></url>
-<url><loc>https://matthewbjane.com/posc/paper/index.html</loc></url>
 <url><loc>https://matthewbjane.com/posc/reference/as.data.frame.posc.html</loc></url>
 <url><loc>https://matthewbjane.com/posc/reference/autoplot.posc.html</loc></url>
 <url><loc>https://matthewbjane.com/posc/reference/autoplot.posc_comparison.html</loc></url>

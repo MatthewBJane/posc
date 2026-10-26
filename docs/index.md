@@ -98,6 +98,13 @@ spline is set up so the fitted curve always satisfies \\P(0) = 0.5\\ and
 independent, so the confidence band comes from a bootstrap that
 resamples people, not pairs.
 
+## Getting help and contributing
+
+Bug reports and questions are welcome as [GitHub
+issues](https://github.com/MatthewBJane/posc/issues). See
+[CONTRIBUTING.md](https://matthewbjane.com/posc/CONTRIBUTING.md) for how
+to report a problem, ask for help, or propose a change.
+
 ## Development
 
 The core of this package was written by the author. Claude, a large

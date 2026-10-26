@@ -48,8 +48,8 @@
       <ul class="navbar-nav me-auto">
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-paper" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Paper</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-paper">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-manuscript" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Manuscript</button>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-manuscript">
 <li><a class="dropdown-item" href="paper/index.html">Read online</a></li>
     <li><a class="dropdown-item" href="paper/index.pdf">PDF</a></li>
   </ul>
@@ -179,6 +179,11 @@
 <p><code><a href="reference/posc_emp.html">posc_emp()</a></code> compares every pair of people (or a random subset of pairs for large samples) and fits a logistic regression of “the person higher on <em>X</em> is also higher on <em>Y</em>” on a natural spline of the difference in <em>X</em>. The spline is set up so the fitted curve always satisfies <span class="math inline">\(P(0) = 0.5\)</span> and <span class="math inline">\(P(-\Delta) = 1 - P(\Delta)\)</span>. Pairs that share a person are not independent, so the confidence band comes from a bootstrap that resamples people, not pairs.</p>
 </div>
 <div class="section level2">
+<h2 id="getting-help-and-contributing">Getting help and contributing<a class="anchor" aria-label="anchor" href="#getting-help-and-contributing"></a>
+</h2>
+<p>Bug reports and questions are welcome as <a href="https://github.com/MatthewBJane/posc/issues" class="external-link">GitHub issues</a>. See <a href="CONTRIBUTING.html">CONTRIBUTING.md</a> for how to report a problem, ask for help, or propose a change.</p>
+</div>
+<div class="section level2">
 <h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
 </h2>
 <p>The core of this package was written by the author. Claude, a large language model developed by Anthropic, was then used under the author’s direction to assist with extending, documenting and testing the code. The author specified the methods and reviewed and verified all code and results.</p>
@@ -199,10 +204,10 @@
 </ul>
 </div>
 
-<div class="paper">
-<h2 data-toc-skip>Paper</h2>
+<div class="manuscript">
+<h2 data-toc-skip>Manuscript</h2>
 <ul class="list-unstyled">
-<li><p><a href="paper/index.html">Read the manuscript</a> (HTML) or <a href="paper/index.pdf">download the PDF</a>.</p></li>
+<li><p>Full technical write-up: <a href="paper/index.html">read online</a> or <a href="paper/index.pdf">download the PDF</a>. The JOSS paper is in the <a href="https://github.com/MatthewBJane/posc/tree/main/joss" class="external-link">joss/</a> folder of the repository.</p></li>
 </ul>
 </div>
 
