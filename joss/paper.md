@@ -88,8 +88,8 @@ differences, among them `effectsize` [@benshachar2020], which also reports
 related indices such as Cohen's $U_3$. For correlations, @li2019 proposed the
 probability of bivariate superiority, a single-number estimate related to
 Dunlap's statistic. In clinical research the concordance index
-[@harrell1982], available in `Hmisc` and `survival`, summarizes how often a
-prognostic model orders two patients correctly. For a continuous outcome it
+[@harrell1982], available in `Hmisc` [@hmisc] and `survival` [@survival],
+summarizes how often a prognostic model orders two patients correctly. For a continuous outcome it
 is Dunlap's statistic with the model prediction as the predictor, again as a
 single number. None of these tools computes the probability as a function of
 the difference between the two people.
