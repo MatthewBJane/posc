@@ -11,15 +11,15 @@ end of the script.  Run with:  python3 make-replication.py
 import re
 
 SRC, OUT = "index.qmd", "replication.R"
-DEFAULT_W, DEFAULT_H = 4.9, 3.675   # jss-pdf defaults
+DEFAULT_W, DEFAULT_H = 5.5, 3.5     # Quarto PDF defaults
 
 src = open(SRC, encoding="utf-8").read()
-title = re.search(r'^title-plain:\s*"(.*)"', src, re.M).group(1)
+title = re.search(r'^title:\s*"(.*)"', src, re.M).group(1)
 body = src.split("\n---\n", 1)[1] if src.startswith("---\n") else src
 
 out = [f"""## Replication script for the manuscript
 ##   "{title}"
-##   submitted to the Journal of Statistical Software
+##   the full manuscript accompanying the posc package
 ##
 ## This script is generated from the Quarto source of the manuscript
 ## (index.qmd) and contains every code chunk of the paper in order.  The

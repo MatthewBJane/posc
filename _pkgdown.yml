@@ -19,10 +19,14 @@ home:
     structure: [links, paper, license, citation, authors, dev]
     components:
       paper:
-        title: Paper
+        title: Manuscript
         text: >-
-          <a href="paper/index.html">Read the manuscript</a> (HTML) or
+          Full technical write-up:
+          <a href="paper/index.html">read online</a> or
           <a href="paper/index.pdf">download the PDF</a>.
+          The JOSS paper is in the
+          <a href="https://github.com/MatthewBJane/posc/tree/main/joss">joss/</a>
+          folder of the repository.
 
 navbar:
   structure:
@@ -30,7 +34,7 @@ navbar:
     right: [search, github]
   components:
     paper:
-      text: Paper
+      text: Manuscript
       menu:
         - text: Read online
           href: paper/index.html

@@ -1,4 +1,4 @@
-# Release checklist: GitHub, website, CRAN, JSS
+# Release checklist: GitHub, website, CRAN, JOSS
 
 Run in this order. Steps 1 and 2 must finish before CRAN (step 3), because
 CRAN checks the website URL in DESCRIPTION.
@@ -15,7 +15,7 @@ devtools::install()                 # the paper and website use the installed pa
 ```sh
 cd ~/posc
 git add -A
-git commit -m "posc 0.2.0: CRAN release, JSS manuscript and website"
+git commit -m "posc 0.2.0: CRAN release, manuscript and website"
 git push origin main
 ```
 
@@ -25,7 +25,7 @@ git push origin main
 cd ~/posc
 Rscript -e 'install.packages("pkgdown")'    # once
 bash dev/build-site.sh                       # pkgdown + quarto render -> docs/
-open docs/index.html                         # look at home, Reference, Paper
+open docs/index.html                         # look at home, Reference, Manuscript
 git add -A && git commit -m "Build website" && git push
 ```
 
@@ -35,7 +35,7 @@ the repository link is shared.
 
 On GitHub: repository **Settings > Pages > Build and deployment**: Source
 "Deploy from a branch", branch `main`, folder `/docs`, Save. After a minute
-check <https://matthewbjane.com/posc/> and the Paper menu (HTML and PDF).
+check <https://matthewbjane.com/posc/> and the Manuscript menu (HTML and PDF).
 
 ## 3. CRAN
 
@@ -67,47 +67,7 @@ After acceptance:
 usethis::use_github_release()       # tags v0.2.0 using NEWS.md
 ```
 
-## 4. JSS
-
-```sh
-cd ~/posc/paper
-quarto render                       # fresh PDF after the final text edits
-Rscript replication.R               # must run end to end; check replication-figures/
-bash make-submission.sh             # -> submission/posc-jss-submission.zip
-```
-
-Read `submission/posc.pdf` once more (title page, address, a caption with
-code, the reference list).
-
-Submit at <https://www.jstatsoft.org/> > **Make a Submission** (register or
-log in; ORCID optional). The form asks for:
-
-1. Section: *Article*. Title and abstract: paste from the PDF.
-2. Manuscript file: `submission/posc.pdf`.
-3. Supplementary files: `submission/posc-jss-submission.zip` (PDF, LaTeX
-   source and figures, `posc_0.2.0.tar.gz`, `replication.R`).
-4. Comments to the editor: say that the package is on CRAN (or under
-   review), that the LaTeX source was produced with Quarto from the included
-   `index.qmd`-based workflow and compiles with the JSS class, and that
-   `replication.R` reproduces every figure and number in about two minutes.
-5. Confirm the author agreement (GPL-compatible license: MIT is fine).
-
-JSS acknowledges by e-mail; first editorial screening usually takes a few
-weeks, review several months. Keep the GitHub repository and the website in
-place, since reviewers follow the links in the Computational details section.
-
-## Done so far
-
-posc 0.2.0 was published on CRAN on 2026-10-21 (DOI 10.32614/CRAN.package.posc)
-from commit f794ddf, tagged v0.2.0.
-
-## 5. Zenodo (optional, for a citable DOI of the paper)
-
-Upload `submission/posc.pdf` at <https://zenodo.org/> (Upload > New upload,
-type Preprint), add the GitHub URL as a related identifier, publish, and put
-the DOI in the package `README.md` and `inst/CITATION`.
-
-## 6. JOSS (Journal of Open Source Software)
+## 4. JOSS (Journal of Open Source Software)
 
 The JOSS paper lives in `joss/` (`paper.md`, `paper.bib`, `empirical.png`).
 Every push that touches `joss/` builds the PDF with the Draft PDF workflow
@@ -129,3 +89,16 @@ References.
    and post the version and the Zenodo DOI in the review issue. Make the
    archive title and author list match the paper.
 5. Add the JOSS DOI to `inst/CITATION`, the README badges and the website.
+
+## Done so far
+
+posc 0.2.0 was published on CRAN on 2026-10-21 (DOI 10.32614/CRAN.package.posc)
+from commit f794ddf, tagged v0.2.0.
+
+JSS submission 6925 was withdrawn in favour of JOSS.
+
+## 5. Zenodo (optional, for a citable DOI of the full manuscript)
+
+Upload `paper/_manuscript/index.pdf` at <https://zenodo.org/> (Upload > New upload,
+type Preprint), add the GitHub URL as a related identifier, publish, and put
+the DOI in the package `README.md` and `inst/CITATION`.

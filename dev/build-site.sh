@@ -4,9 +4,9 @@
 #   bash dev/build-site.sh        # from the package root
 #
 # 1. pkgdown builds the reference pages, README home page and NEWS into docs/.
-# 2. Quarto renders the manuscript (HTML with a PDF link, and the PDF) into
-#    paper/_manuscript/, which is copied to docs/paper/ without the LaTeX
-#    sources.
+# 2. Quarto renders the full manuscript (HTML with a PDF link, and the PDF)
+#    into paper/_manuscript/, which is copied to docs/paper/ without any
+#    intermediate files.
 # Then commit docs/ and push.
 set -euo pipefail
 cd "$(dirname "$0")/.."

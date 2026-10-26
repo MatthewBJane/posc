@@ -1,6 +1,6 @@
 ## Replication script for the manuscript
 ##   "posc: Probability of Outcome Superiority Curves in R"
-##   submitted to the Journal of Statistical Software
+##   the full manuscript accompanying the posc package
 ##
 ## This script is generated from the Quarto source of the manuscript
 ## (index.qmd) and contains every code chunk of the paper in order.  The
@@ -19,9 +19,8 @@ dir.create("replication-figures", showWarnings = FALSE)
 
 ## ---- setup
 ## Options and helper functions used throughout the manuscript.
-options(prompt = "R> ", continue = "+  ", width = 70, useFancyQuotes = FALSE,
-        digits = 4)
-knitr::opts_chunk$set(prompt = TRUE, comment = NA, fig.align = "center",
+options(width = 70, useFancyQuotes = FALSE, digits = 4)
+knitr::opts_chunk$set(prompt = FALSE, comment = NA, fig.align = "center",
                       dev = if (knitr::is_latex_output()) "cairo_pdf" else "png")
 library("posc")
 library("ggplot2")
