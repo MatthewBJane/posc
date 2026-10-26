@@ -1,147 +1,0 @@
-[31m
-
-processing file: index.qmd
-[39m  |                                                          |                                                  |   0%  |                                                          |.                                                 |   2%                      |                                                          |..                                                |   4% [setup]              |                                                          |...                                               |   6%                      |                                                          |....                                              |   8% [fig-conditionals]   |                                                          |.....                                             |  10%                      |                                                          |......                                            |  12% [fig-family]         |                                                          |.......                                           |  14%                      |                                                          |........                                          |  16% [fig-composite]      |                                                          |.........                                         |  18%                      |                                                          |..........                                        |  20% [fig-pairs]          |                                                          |...........                                       |  22%                      |                                                          |............                                      |  24% [empirical-u]        |                                                          |.............                                     |  27%                      |                                                          |..............                                    |  29% [fig-invu]           |                                                          |...............                                   |  31%                      |                                                          |................                                  |  33% [fig-plots]          |                                                          |.................                                 |  35%                      |                                                          |..................                                |  37% [basic]              |                                                          |...................                               |  39%                      |                                                          |....................                              |  41% [basic-predict]      |                                                          |.....................                             |  43%                      |                                                          |......................                            |  45% [selection]          |                                                          |.......................                           |  47%                      |                                                          |........................                          |  49% [fig-selection]      |                                                          |..........................                        |  51%                      |                                                          |...........................                       |  53% [selection-summary]  |                                                          |............................                      |  55%                      |                                                          |.............................                     |  57% [tbl-selection]      |                                                          |..............................                    |  59%                      |                                                          |...............................                   |  61% [methods]            |                                                          |................................                  |  63%                      |                                                          |.................................                 |  65% [comp-test]          |                                                          |..................................                |  67%                      |                                                          |...................................               |  69% [composite]          |                                                          |....................................              |  71%                      |                                                          |.....................................             |  73% [lm]                 |                                                          |......................................            |  76%                      |                                                          |.......................................           |  78% [fig-methods]        |                                                          |........................................          |  80%                      |                                                          |.........................................         |  82% [empirical-va]       |                                                          |..........................................        |  84%                      |                                                          |...........................................       |  86% [empirical-va-ref]   |                                                          |............................................      |  88%                      |                                                          |.............................................     |  90% [empirical-bins]     |                                                          |..............................................    |  92%                      |                                                          |...............................................   |  94% [fig-empirical]      |                                                          |................................................  |  96%                      |                                                          |................................................. |  98% [versions]           |                                                          |..................................................| 100%                                                                                                                                  
-[31moutput file: index.knit.md
-
-[39m[1m[34mRendering qmd embeds [index.qmd][39m[22m
-[1m[34mRendering output notebook [index.qmd][39m[22m
-[1m[34mRendering HTML preview [index.qmd][39m[22m
-[1mpandoc [22m
-  to: html
-  output-file: /Users/mattjane/posc/paper/index.html
-  standalone: true
-  section-divs: true
-  html-math-method: mathjax
-  wrap: none
-  default-image-extension: png
-  toc: true
-  number-sections: true
-  shift-heading-level-by: -1
-  
-[1mmetadata[22m
-  document-css: false
-  link-citations: true
-  date-format: long
-  lang: en
-  manuscript:
-    article: index.qmd
-    meca-bundle: false
-    notebooks:
-      - notebook: index.qmd
-        title: Article Notebook
-        order: 9999
-    mecaFile: index-meca.zip
-  notebook-preview-options:
-    back: true
-  theme: cosmo
-  title-block-style: manuscript
-  lightbox: auto
-  title: 'posc: Probability of Outcome Superiority Curves in R'
-  author:
-    - name: Matthew B. Jané
-      affiliations:
-        - name: University of Connecticut
-          department: Department of Psychological Sciences
-          address: 406 Babbidge Road, Unit 1020
-          city: Storrs, CT 06269
-          country: United States
-      email: matthew.jane@uconn.edu
-      url: https://matthewbjane.com
-  abstract: |
-    The relationship between a continuous predictor and a continuous outcome is conventionally summarized by a correlation coefficient, which is difficult to interpret in terms of the decisions it is meant to inform. Common language effect sizes express an effect as a probability. The existing common language effect size for correlations is the probability that a person who scores higher than another person on the predictor also scores higher on the outcome. This probability is a single number, but in practice it depends on how far apart the two people are on the predictor. This paper introduces the probability of outcome superiority curve (POSC), which gives the probability that the person with the higher predictor score has the higher outcome as a function of the difference between the two people on the predictor. The curve is implemented in the R package **posc**. The curve is derived under bivariate normality for a single predictor, for a composite of several predictors, and for the predictions of a linear model, with confidence bands based on the Fisher transformation. An empirical POSC is also developed that is estimated from raw data without a distributional assumption, using a symmetry-constrained spline model fitted to all pairs of observations with bootstrap confidence bands. The empirical curve can recover the shape of nonlinear and nonmonotone relationships. The existing common language effect size for correlations is shown to be the POSC averaged over the distribution of differences in the predictor. The package provides constructors for each type of curve, a common class with print, summary, plot and predict methods, and functions for comparing curves. Its use is illustrated with three clinical examples, namely prioritizing patients with a prognostic score, combining prognostic measures, and the survival of lung cancer patients as a function of performance status.
-  keywords:
-    - common language effect size
-    - probability of superiority
-    - correlation
-    - prognosis
-    - clinical prediction
-    - bootstrap
-    - R
-  bibliography:
-    - references.bib
-  google-scholar: true
-  toc-location: left
-  clear-hidden-classes: none
-  remove-hidden: all
-  unroll-markdown-cells: true
-  
-[31m
-
-processing file: index.qmd
-[39m  |                                                          |                                                  |   0%  |                                                          |.                                                 |   2%                      |                                                          |..                                                |   4% [setup]              |                                                          |...                                               |   6%                      |                                                          |....                                              |   8% [fig-conditionals]   |                                                          |.....                                             |  10%                      |                                                          |......                                            |  12% [fig-family]         |                                                          |.......                                           |  14%                      |                                                          |........                                          |  16% [fig-composite]      |                                                          |.........                                         |  18%                      |                                                          |..........                                        |  20% [fig-pairs]          |                                                          |...........                                       |  22%                      |                                                          |............                                      |  24% [empirical-u]        |                                                          |.............                                     |  27%                      |                                                          |..............                                    |  29% [fig-invu]           |                                                          |...............                                   |  31%                      |                                                          |................                                  |  33% [fig-plots]          |                                                          |.................                                 |  35%                      |                                                          |..................                                |  37% [basic]              |                                                          |...................                               |  39%                      |                                                          |....................                              |  41% [basic-predict]      |                                                          |.....................                             |  43%                      |                                                          |......................                            |  45% [selection]          |                                                          |.......................                           |  47%                      |                                                          |........................                          |  49% [fig-selection]      |                                                          |..........................                        |  51%                      |                                                          |...........................                       |  53% [selection-summary]  |                                                          |............................                      |  55%                      |                                                          |.............................                     |  57% [tbl-selection]      |                                                          |..............................                    |  59%                      |                                                          |...............................                   |  61% [methods]            |                                                          |................................                  |  63%                      |                                                          |.................................                 |  65% [comp-test]          |                                                          |..................................                |  67%                      |                                                          |...................................               |  69% [composite]          |                                                          |....................................              |  71%                      |                                                          |.....................................             |  73% [lm]                 |                                                          |......................................            |  76%                      |                                                          |.......................................           |  78% [fig-methods]        |                                                          |........................................          |  80%                      |                                                          |.........................................         |  82% [empirical-va]       |                                                          |..........................................        |  84%                      |                                                          |...........................................       |  86% [empirical-va-ref]   |                                                          |............................................      |  88%                      |                                                          |.............................................     |  90% [empirical-bins]     |                                                          |..............................................    |  92%                      |                                                          |...............................................   |  94% [fig-empirical]      |                                                          |................................................  |  96%                      |                                                          |................................................. |  98% [versions]           |                                                          |..................................................| 100%                                                                                                                                  
-[31moutput file: index.knit.md
-
-[39m[1mpandoc [22m
-  to: latex
-  output-file: index.tex
-  standalone: true
-  pdf-engine: lualatex
-  variables:
-    graphics: true
-    tables: true
-  default-image-extension: pdf
-  number-sections: true
-  shift-heading-level-by: -1
-  
-[1mmetadata[22m
-  block-headings: true
-  manuscript:
-    article: index.qmd
-    meca-bundle: false
-    notebooks:
-      - notebook: index.qmd
-        title: Article Notebook
-        order: 9999
-    mecaFile: index-meca.zip
-  notebook-preview-options:
-    back: true
-  theme: cosmo
-  title-block-style: manuscript
-  lightbox: auto
-  documentclass: article
-  geometry:
-    - margin=1in
-  colorlinks: true
-  tbl-cap-location: bottom
-  title: 'posc: Probability of Outcome Superiority Curves in R'
-  author:
-    - name: Matthew B. Jané
-      affiliations:
-        - name: University of Connecticut
-          department: Department of Psychological Sciences
-          address: 406 Babbidge Road, Unit 1020
-          city: Storrs, CT 06269
-          country: United States
-      email: matthew.jane@uconn.edu
-      url: https://matthewbjane.com
-  abstract: |
-    The relationship between a continuous predictor and a continuous outcome is conventionally summarized by a correlation coefficient, which is difficult to interpret in terms of the decisions it is meant to inform. Common language effect sizes express an effect as a probability. The existing common language effect size for correlations is the probability that a person who scores higher than another person on the predictor also scores higher on the outcome. This probability is a single number, but in practice it depends on how far apart the two people are on the predictor. This paper introduces the probability of outcome superiority curve (POSC), which gives the probability that the person with the higher predictor score has the higher outcome as a function of the difference between the two people on the predictor. The curve is implemented in the R package **posc**. The curve is derived under bivariate normality for a single predictor, for a composite of several predictors, and for the predictions of a linear model, with confidence bands based on the Fisher transformation. An empirical POSC is also developed that is estimated from raw data without a distributional assumption, using a symmetry-constrained spline model fitted to all pairs of observations with bootstrap confidence bands. The empirical curve can recover the shape of nonlinear and nonmonotone relationships. The existing common language effect size for correlations is shown to be the POSC averaged over the distribution of differences in the predictor. The package provides constructors for each type of curve, a common class with print, summary, plot and predict methods, and functions for comparing curves. Its use is illustrated with three clinical examples, namely prioritizing patients with a prognostic score, combining prognostic measures, and the survival of lung cancer patients as a function of performance status.
-  keywords:
-    - common language effect size
-    - probability of superiority
-    - correlation
-    - prognosis
-    - clinical prediction
-    - bootstrap
-    - R
-  bibliography:
-    - references.bib
-  google-scholar: true
-  clear-hidden-classes: none
-  remove-hidden: all
-  unroll-markdown-cells: true
-  
-[1m[34m
-Rendering PDF[39m[22m
-[1m[34mrunning lualatex - 1[39m[22m
-  This is LuaHBTeX, Version 1.24.0 (TeX Live 2026) 
-   restricted system commands enabled.
-  
-[1m[34mrunning lualatex - 2[39m[22m
-  This is LuaHBTeX, Version 1.24.0 (TeX Live 2026) 
-   restricted system commands enabled.
-  
-
-Output created: _manuscript/index.html
-

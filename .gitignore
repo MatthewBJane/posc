@@ -16,3 +16,4 @@ paper/index_files/
 **/*.quarto_ipynb
 paper/replication-figures/
 paper/Rplots.pdf
+*.log
