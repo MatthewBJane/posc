@@ -95,7 +95,6 @@ References.
 posc 0.2.0 was published on CRAN on 2026-10-21 (DOI 10.32614/CRAN.package.posc)
 from commit f794ddf, tagged v0.2.0.
 
-JSS submission 6925 was withdrawn in favour of JOSS.
 
 ## 5. Zenodo (optional, for a citable DOI of the full manuscript)
 
